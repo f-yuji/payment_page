@@ -1,0 +1,422 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>メンバーシップ登録</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #111827;
+      --accent-2: #2563eb;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,0.08), transparent 28%),
+        radial-gradient(circle at top right, rgba(17,24,39,0.08), transparent 24%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1120px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(229,231,235,0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 40px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 18px 0 12px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .price-row {
+      margin-top: 28px;
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .price {
+      font-size: clamp(42px, 5vw, 60px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .price-sub {
+      padding-bottom: 8px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .mini-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .feature-grid {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .feature {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .feature strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .list {
+      margin-top: 24px;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+
+    .list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1f2937;
+    }
+
+    .check {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 24px;
+      border-radius: 999px;
+      background: rgba(22,163,74,0.1);
+      color: var(--ok);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      margin-top: 1px;
+    }
+
+    .pay {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-self: center;
+      position: sticky;
+      top: 24px;
+    }
+
+    .plan-box {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .plan-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .plan-name {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .plan-desc {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .plan-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .summary {
+      border-top: 1px solid var(--line);
+      margin-top: 18px;
+      padding-top: 18px;
+      display: grid;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .summary-row span:last-child {
+      font-weight: 700;
+    }
+
+    .summary-total {
+      padding-top: 14px;
+      border-top: 1px dashed var(--line);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .cta {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      min-height: 56px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #111827 0%, #2563eb 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .cta:hover { transform: translateY(-1px); }
+    .cta:active { transform: translateY(0); }
+
+    .sub-cta {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      min-height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .trust {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fcfcfd;
+    }
+
+    .trust-item {
+      display: flex;
+      gap: 10px;
+      align-items: start;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .warn {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .foot {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .hero,
+      .pay {
+        padding: 24px;
+      }
+
+      .pay {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <section class="card hero">
+        <div class="badge">LINEニュースbot メンバーシップ</div>
+        <h1>会話のネタ切れを減らす。
+          <br>ニュース理解も一段深く。</h1>
+        <p class="lead">
+          毎日のニュース配信に加えて、深掘り、会話ネタ、相手に合わせた話題づくりまでまとめて使える。
+          LINEの中だけで完結する前提で組んだページにしてある。
+        </p>
+
+        <div class="price-row">
+          <div class="price">月額400円</div>
+          <div class="price-sub">税込 / いつでも停止可</div>
+        </div>
+        <div class="mini-note">無料でも基本機能は使える。追加機能だけメンバーシップ側に寄せる構成。</div>
+
+        <div class="feature-grid">
+          <div class="feature">
+            <strong>ニュース深掘り</strong>
+            <p>気になる見出しをそのまま送るだけで、要点と意味を会話向けの温度感で返す。</p>
+          </div>
+          <div class="feature">
+            <strong>会話ネタ生成</strong>
+            <p>雑談の入口だけじゃなく、返しや次の一手まで出して使いやすくする。</p>
+          </div>
+          <div class="feature">
+            <strong>相手別の話題</strong>
+            <p>彼女、上司、お客さんなど、相手に合わせて角度を変えた話題を作れる。</p>
+          </div>
+          <div class="feature">
+            <strong>朝夜2回の配信</strong>
+            <p>無料版より情報量を増やしつつ、必要なジャンルに寄せて受け取りやすくする。</p>
+          </div>
+        </div>
+
+        <ul class="list">
+          <li><span class="check">✓</span><span>追加ニュースの閲覧回数を拡張</span></li>
+          <li><span class="check">✓</span><span>ニュースQ&Aの上限数を拡張</span></li>
+          <li><span class="check">✓</span><span>会話テンプレの精度を無料版より上げた構成</span></li>
+          <li><span class="check">✓</span><span>LINEだけで使えるから、別アプリを開かなくていい</span></li>
+        </ul>
+      </section>
+
+      <aside class="card pay">
+        <div class="plan-box">
+          <div class="plan-top">
+            <div>
+              <div class="plan-name">メンバーシップ登録</div>
+              <div class="plan-desc">まずは月額プランで開始。決済完了後、そのままLINE側の機能を開放する想定。</div>
+            </div>
+            <div class="plan-pill">月額</div>
+          </div>
+
+          <div class="summary">
+            <div class="summary-row"><span>プラン</span><span>メンバーシップ</span></div>
+            <div class="summary-row"><span>月額料金</span><span>400円</span></div>
+            <div class="summary-row"><span>初回請求</span><span>申込完了時</span></div>
+            <div class="summary-row"><span>更新</span><span>毎月自動更新</span></div>
+            <div class="summary-row summary-total"><span>お支払い合計</span><span>400円</span></div>
+          </div>
+        </div>
+
+        <a class="cta" href="#" id="paymentButton">このまま続ける</a>
+        <a class="sub-cta" href="#">無料プランのまま使う</a>
+
+        <div class="trust">
+          <div class="trust-item"><strong>決済について</strong></div>
+          <div class="trust-item">・このボタンの遷移先に Stripe か LINE公式の決済ページを接続する想定。</div>
+          <div class="trust-item">・登録後は bot 側で membership_status を更新して機能開放。</div>
+          <div class="trust-item">・停止は次回更新日前までに行えばOK、みたいな文言を本番仕様に合わせて差し替えればいい。</div>
+          <div class="trust-item"><span class="warn">※</span><span>現状はデモ。実際の課金導線URLは未接続。</span></div>
+        </div>
+
+        <div class="foot">
+          特定商取引法に基づく表記 / 利用規約 / プライバシーポリシー は
+          本番公開時にフッターへリンク追加推奨。
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('paymentButton').addEventListener('click', function (e) {
+      e.preventDefault();
+      alert('ここに決済URLを接続');
+    });
+  </script>
+</body>
+</html>
