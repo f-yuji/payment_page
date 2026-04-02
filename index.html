@@ -1,421 +1,690 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>メンバーシップ登録</title>
+  <title>沈黙を回避するLINEニュースbot | メンバーシップ登録</title>
+  <meta name="description" content="朝5時に届く10秒の予習。ニュースを会話で使える形に変えて、商談・雑談・飲み会の気まずい沈黙を回避するLINEニュースbot。" />
   <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --accent: #111827;
-      --accent-2: #2563eb;
-      --ok: #16a34a;
-      --warn: #f59e0b;
-      --shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
-      --radius: 24px;
+    :root{
+      --bg:#09111f;
+      --bg-2:#0e172a;
+      --card:#101b31;
+      --card-2:#13203a;
+      --line:rgba(255,255,255,.10);
+      --text:#eef4ff;
+      --muted:#aab7d1;
+      --sub:#7f8daa;
+      --accent:#58a6ff;
+      --accent-2:#7c4dff;
+      --good:#34d399;
+      --warn:#fbbf24;
+      --danger:#fb7185;
+      --shadow:0 30px 80px rgba(0,0,0,.34);
+      --radius:24px;
+      --radius-sm:18px;
+      --max:1180px;
     }
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(37,99,235,0.08), transparent 28%),
-        radial-gradient(circle at top right, rgba(17,24,39,0.08), transparent 24%),
-        var(--bg);
-      color: var(--text);
+        radial-gradient(circle at 0% 0%, rgba(88,166,255,.16), transparent 28%),
+        radial-gradient(circle at 100% 10%, rgba(124,77,255,.18), transparent 26%),
+        radial-gradient(circle at 50% 100%, rgba(52,211,153,.08), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, #08101d 45%, #07101b 100%);
+      min-height:100vh;
     }
 
-    .wrap {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 16px;
+    a{color:inherit;text-decoration:none}
+    .container{width:min(calc(100% - 32px), var(--max)); margin:0 auto}
+    .hero-wrap{padding:32px 0 24px}
+    .shell{
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);
+      gap:24px;
+      align-items:start;
     }
 
-    .shell {
-      width: 100%;
-      max-width: 1120px;
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 24px;
+    .card{
+      background:linear-gradient(180deg, rgba(19,32,58,.92), rgba(12,23,43,.96));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
     }
 
-    .card {
-      background: var(--card);
-      border: 1px solid rgba(229,231,235,0.9);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+    .hero{padding:40px}
+    .badge-row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.02em;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      color:#dbe8ff;
+    }
+    .badge.hot{
+      background:rgba(251,113,133,.12);
+      color:#ffd5df;
+      border-color:rgba(251,113,133,.24);
     }
 
-    .hero {
-      padding: 40px;
+    h1{
+      margin:18px 0 14px;
+      font-size:clamp(34px,5vw,68px);
+      line-height:1.02;
+      letter-spacing:-.05em;
+    }
+    .headline-accent{
+      display:block;
+      background:linear-gradient(135deg, #ffffff 10%, #9ed0ff 45%, #b99cff 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .lead{
+      margin:0;
+      font-size:17px;
+      line-height:1.95;
+      color:var(--muted);
+      max-width:760px;
+    }
+    .fear-box{
+      margin-top:22px;
+      padding:18px 20px;
+      border-radius:20px;
+      background:linear-gradient(180deg, rgba(251,113,133,.10), rgba(251,113,133,.04));
+      border:1px solid rgba(251,113,133,.18);
+      color:#ffe2e8;
+      line-height:1.8;
+      font-size:14px;
     }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: #eef2ff;
-      color: #3730a3;
-      font-size: 13px;
-      font-weight: 700;
+    .hero-grid{
+      margin-top:28px;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+    .mini-card{
+      padding:18px;
+      border-radius:20px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+    .mini-label{
+      color:#dfe8fb;
+      font-size:14px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .mini-card p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
     }
 
-    h1 {
-      margin: 18px 0 12px;
-      font-size: clamp(30px, 4vw, 48px);
-      line-height: 1.15;
-      letter-spacing: -0.03em;
+    .phone{
+      margin-top:26px;
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:18px;
+      align-items:center;
+    }
+    .phone-frame{
+      border-radius:32px;
+      background:#050b15;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 20px 60px rgba(0,0,0,.40);
+      padding:14px;
+    }
+    .phone-screen{
+      border-radius:24px;
+      overflow:hidden;
+      background:linear-gradient(180deg,#0d1526,#091120);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .phone-top{
+      padding:12px 16px 8px;
+      font-size:12px;
+      color:#dbe6ff;
+      display:flex;
+      justify-content:space-between;
+      opacity:.92;
+    }
+    .chat-head{
+      padding:12px 16px;
+      border-top:1px solid rgba(255,255,255,.04);
+      border-bottom:1px solid rgba(255,255,255,.04);
+      background:rgba(255,255,255,.02);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:13px;
+      font-weight:700;
+    }
+    .avatar{
+      width:32px;height:32px;border-radius:999px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,#58a6ff,#7c4dff);
+      color:#fff;font-size:13px;font-weight:900;
+    }
+    .chat-body{padding:16px; display:grid; gap:12px}
+    .bubble{
+      max-width:88%;
+      padding:12px 14px;
+      border-radius:18px;
+      line-height:1.75;
+      font-size:13px;
+      white-space:pre-line;
+    }
+    .bubble.left{
+      background:#16233d;
+      border:1px solid rgba(255,255,255,.06);
+      color:#eef4ff;
+      border-top-left-radius:8px;
+    }
+    .bubble.right{
+      margin-left:auto;
+      background:linear-gradient(135deg,#58a6ff,#7c4dff);
+      color:#fff;
+      border-top-right-radius:8px;
     }
 
-    .lead {
-      margin: 0;
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.8;
+    .phone-copy{
+      display:grid;
+      gap:14px;
+    }
+    .quote{
+      padding:16px 18px;
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      color:var(--muted);
+      line-height:1.9;
+      font-size:14px;
+    }
+    .quote strong{color:#fff}
+
+    .right-col{
+      position:sticky;
+      top:24px;
+      display:grid;
+      gap:16px;
+    }
+    .plan{padding:24px}
+    .price-kicker{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:start;
+      margin-bottom:14px;
+    }
+    .plan-tag{
+      padding:7px 11px;
+      border-radius:999px;
+      background:rgba(52,211,153,.12);
+      color:#c9ffea;
+      border:1px solid rgba(52,211,153,.24);
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .plan h2{
+      margin:0;
+      font-size:24px;
+      line-height:1.2;
+      letter-spacing:-.03em;
+    }
+    .plan p{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.85;
     }
 
-    .price-row {
-      margin-top: 28px;
-      display: flex;
-      align-items: end;
-      gap: 10px;
-      flex-wrap: wrap;
+    .price-box{
+      margin-top:20px;
+      padding:18px;
+      border-radius:20px;
+      background:linear-gradient(180deg, rgba(88,166,255,.12), rgba(124,77,255,.10));
+      border:1px solid rgba(88,166,255,.18);
+    }
+    .price-main{
+      display:flex;
+      align-items:end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .price-main .num{
+      font-size:48px;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:-.05em;
+      color:#fff;
+    }
+    .price-main .unit{
+      color:#d3def7;
+      font-size:15px;
+      padding-bottom:7px;
+    }
+    .price-note{
+      margin-top:8px;
+      color:#dbe8ff;
+      font-size:13px;
+      line-height:1.8;
     }
 
-    .price {
-      font-size: clamp(42px, 5vw, 60px);
-      line-height: 1;
-      font-weight: 800;
-      letter-spacing: -0.04em;
+    .micro-copy{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(251,191,36,.08);
+      border:1px solid rgba(251,191,36,.18);
+      color:#ffe9b0;
+      font-size:13px;
+      line-height:1.75;
+      font-weight:700;
     }
 
-    .price-sub {
-      padding-bottom: 8px;
-      color: var(--muted);
-      font-size: 15px;
+    .summary{
+      margin-top:16px;
+      display:grid;
+      gap:12px;
+      font-size:14px;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      color:var(--muted);
+    }
+    .row strong{color:#fff}
+    .row.total{
+      padding-top:14px;
+      border-top:1px dashed rgba(255,255,255,.12);
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
     }
 
-    .mini-note {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 13px;
+    .cta{
+      width:100%;
+      min-height:58px;
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      border-radius:18px;
+      background:linear-gradient(135deg,#5db0ff 0%, #7c4dff 60%, #8e44ff 100%);
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:.01em;
+      box-shadow:0 16px 40px rgba(88,166,255,.28);
+      transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+    .cta:hover{transform:translateY(-1px); box-shadow:0 20px 44px rgba(88,166,255,.36)}
+    .cta:active{transform:translateY(0)}
+    .sub-cta{
+      width:100%;
+      min-height:48px;
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      border-radius:16px;
+      border:1px solid var(--line);
+      color:#e6efff;
+      background:rgba(255,255,255,.03);
+      font-size:14px;
+      font-weight:700;
     }
 
-    .feature-grid {
-      margin-top: 28px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+    .small{
+      color:var(--sub);
+      font-size:12px;
+      line-height:1.8;
+      text-align:center;
     }
 
-    .feature {
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 16px;
-      background: #fff;
+    .section{
+      padding:12px 0 0;
+    }
+    .section-title{
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.04em;
+      color:#cddcff;
+      margin-bottom:14px;
     }
 
-    .feature strong {
-      display: block;
-      font-size: 15px;
-      margin-bottom: 6px;
+    .timeline, .compare, .benefits, .faq{
+      display:grid;
+      gap:14px;
+    }
+    .timeline-card, .compare-card, .benefit-card, .faq-card{
+      padding:20px;
+      border-radius:20px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+    .timeline-card strong,
+    .compare-card strong,
+    .benefit-card strong,
+    .faq-card strong{
+      display:block;
+      color:#fff;
+      margin-bottom:8px;
+      font-size:16px;
+    }
+    .timeline-card p,
+    .compare-card p,
+    .benefit-card p,
+    .faq-card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.9;
+      font-size:14px;
     }
 
-    .feature p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
+    .compare-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px;
+    }
+    .compare-card.bad{
+      background:linear-gradient(180deg, rgba(251,113,133,.08), rgba(255,255,255,.02));
+      border-color:rgba(251,113,133,.20);
+    }
+    .compare-card.good{
+      background:linear-gradient(180deg, rgba(52,211,153,.08), rgba(255,255,255,.02));
+      border-color:rgba(52,211,153,.20);
+    }
+    .compare-label{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:12px;
+    }
+    .compare-card.bad .compare-label{
+      background:rgba(251,113,133,.12);
+      color:#ffd5df;
+    }
+    .compare-card.good .compare-label{
+      background:rgba(52,211,153,.12);
+      color:#cbffe9;
     }
 
-    .list {
-      margin-top: 24px;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 12px;
+    .benefit-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px;
     }
 
-    .list li {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      font-size: 14px;
-      line-height: 1.7;
-      color: #1f2937;
+    .footer-note{
+      margin:34px 0 56px;
+      color:var(--sub);
+      text-align:center;
+      font-size:12px;
+      line-height:1.8;
     }
 
-    .check {
-      width: 24px;
-      height: 24px;
-      flex: 0 0 24px;
-      border-radius: 999px;
-      background: rgba(22,163,74,0.1);
-      color: var(--ok);
-      display: grid;
-      place-items: center;
-      font-size: 13px;
-      font-weight: 800;
-      margin-top: 1px;
+    @media (max-width: 1024px){
+      .shell{grid-template-columns:1fr}
+      .right-col{position:static}
+      .phone{grid-template-columns:1fr}
     }
 
-    .pay {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      align-self: center;
-      position: sticky;
-      top: 24px;
-    }
-
-    .plan-box {
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 20px;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    }
-
-    .plan-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: start;
-    }
-
-    .plan-name {
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .plan-desc {
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .plan-pill {
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #111827;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .summary {
-      border-top: 1px solid var(--line);
-      margin-top: 18px;
-      padding-top: 18px;
-      display: grid;
-      gap: 12px;
-      font-size: 14px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .summary-row span:last-child {
-      font-weight: 700;
-    }
-
-    .summary-total {
-      padding-top: 14px;
-      border-top: 1px dashed var(--line);
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .cta {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      min-height: 56px;
-      border: none;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #111827 0%, #2563eb 100%);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.15s ease, opacity 0.15s ease;
-    }
-
-    .cta:hover { transform: translateY(-1px); }
-    .cta:active { transform: translateY(0); }
-
-    .sub-cta {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      min-height: 48px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: #fff;
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .trust {
-      display: grid;
-      gap: 10px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 16px;
-      background: #fcfcfd;
-    }
-
-    .trust-item {
-      display: flex;
-      gap: 10px;
-      align-items: start;
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--muted);
-    }
-
-    .warn {
-      color: var(--warn);
-      font-weight: 700;
-    }
-
-    .foot {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.7;
-      text-align: center;
-    }
-
-    @media (max-width: 920px) {
-      .shell {
-        grid-template-columns: 1fr;
-      }
-
-      .hero,
-      .pay {
-        padding: 24px;
-      }
-
-      .pay {
-        position: static;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .feature-grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 720px){
+      .hero{padding:24px}
+      .plan{padding:20px}
+      .hero-grid, .benefit-grid, .compare-grid{grid-template-columns:1fr}
+      h1{font-size:clamp(30px, 11vw, 48px)}
+      .lead{font-size:15px}
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="shell">
-      <section class="card hero">
-        <div class="badge">LINEニュースbot メンバーシップ</div>
-        <h1>会話のネタ切れを減らす。
-          <br>ニュース理解も一段深く。</h1>
-        <p class="lead">
-          毎日のニュース配信に加えて、深掘り、会話ネタ、相手に合わせた話題づくりまでまとめて使える。
-          LINEの中だけで完結する前提で組んだページにしてある。
-        </p>
-
-        <div class="price-row">
-          <div class="price">月額400円</div>
-          <div class="price-sub">税込 / いつでも停止可</div>
-        </div>
-        <div class="mini-note">無料でも基本機能は使える。追加機能だけメンバーシップ側に寄せる構成。</div>
-
-        <div class="feature-grid">
-          <div class="feature">
-            <strong>ニュース深掘り</strong>
-            <p>気になる見出しをそのまま送るだけで、要点と意味を会話向けの温度感で返す。</p>
+  <div class="hero-wrap">
+    <div class="container">
+      <div class="shell">
+        <section class="card hero">
+          <div class="badge-row">
+            <div class="badge hot">朝5時に届く10秒の予習</div>
+            <div class="badge">LINE完結</div>
+            <div class="badge">商談・雑談・飲み会で使える</div>
           </div>
-          <div class="feature">
-            <strong>会話ネタ生成</strong>
-            <p>雑談の入口だけじゃなく、返しや次の一手まで出して使いやすくする。</p>
-          </div>
-          <div class="feature">
-            <strong>相手別の話題</strong>
-            <p>彼女、上司、お客さんなど、相手に合わせて角度を変えた話題を作れる。</p>
-          </div>
-          <div class="feature">
-            <strong>朝夜2回の配信</strong>
-            <p>無料版より情報量を増やしつつ、必要なジャンルに寄せて受け取りやすくする。</p>
-          </div>
-        </div>
 
-        <ul class="list">
-          <li><span class="check">✓</span><span>追加ニュースの閲覧回数を拡張</span></li>
-          <li><span class="check">✓</span><span>ニュースQ&Aの上限数を拡張</span></li>
-          <li><span class="check">✓</span><span>会話テンプレの精度を無料版より上げた構成</span></li>
-          <li><span class="check">✓</span><span>LINEだけで使えるから、別アプリを開かなくていい</span></li>
-        </ul>
-      </section>
+          <h1>
+            あの気まずい沈黙、
+            <span class="headline-accent">もう終わりにしませんか？</span>
+          </h1>
 
-      <aside class="card pay">
-        <div class="plan-box">
-          <div class="plan-top">
-            <div>
-              <div class="plan-name">メンバーシップ登録</div>
-              <div class="plan-desc">まずは月額プランで開始。決済完了後、そのままLINE側の機能を開放する想定。</div>
+          <p class="lead">
+            商談の導入、飲み会の隙間、エレベーターの中。<br>
+            何か話さなきゃと思うほど、言葉が出てこない。<br>
+            このLINEは、ニュースを「読むもの」じゃなく
+            <strong style="color:#fff">そのまま使える会話ネタ</strong>に変える。
+          </p>
+
+          <div class="fear-box">
+            「最近、何か面白いニュースあった？」<br>
+            その一言で詰まる。適当に合わせて浅く終わる。会話が止まる。<br>
+            問題はニュースを知らないことじゃない。<strong>その場を乗り切れないこと</strong>だ。
+          </div>
+
+          <div class="hero-grid">
+            <div class="mini-card">
+              <div class="mini-label">朝10秒の防衛準備</div>
+              <p>朝5時に届く。起きてすぐ眺めるだけ。今日の話題探しがその場で終わる。</p>
             </div>
-            <div class="plan-pill">月額</div>
+            <div class="mini-card">
+              <div class="mini-label">困った時のお守り</div>
+              <p>知らない話題が来てもLINEで「〇〇って何？」と送るだけ。AIが耳打ちする。</p>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">二の矢まで用意</div>
+              <p>「詳しく」で深掘り。相手が食いついた後の返しまで続けられる。</p>
+            </div>
           </div>
 
-          <div class="summary">
-            <div class="summary-row"><span>プラン</span><span>メンバーシップ</span></div>
-            <div class="summary-row"><span>月額料金</span><span>400円</span></div>
-            <div class="summary-row"><span>初回請求</span><span>申込完了時</span></div>
-            <div class="summary-row"><span>更新</span><span>毎月自動更新</span></div>
-            <div class="summary-row summary-total"><span>お支払い合計</span><span>400円</span></div>
+          <div class="phone">
+            <div class="phone-frame">
+              <div class="phone-screen">
+                <div class="phone-top">
+                  <span>5:00</span>
+                  <span>LINE</span>
+                  <span>100%</span>
+                </div>
+                <div class="chat-head">
+                  <div class="avatar">N</div>
+                  <div>ニュースbot</div>
+                </div>
+                <div class="chat-body">
+                  <div class="bubble left">今日のニュース、ここだけ。
+
+①［金利］
+住宅ローンへの影響が話題
+👉 家計に効きそう
+
+②［AI］
+生成AIの新機能
+👉 仕事で使う人さらに増えそう</div>
+                  <div class="bubble right">詳しく</div>
+                  <div class="bubble left">最近の金利は、住宅ローンや家計への影響で会話にしやすい。
+「変動金利の人、気になりますよね」で入りやすい。</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="phone-copy">
+              <div class="quote">
+                <strong>朝5時に届くから、起きてすぐ今日の話題探しが終わる。</strong><br>
+                ニュースアプリを開いて探し回る必要はない。今日使えそうな話題だけ、最初から絞って届く。
+              </div>
+              <div class="quote">
+                <strong>これは勉強じゃない。カンニングペーパーだ。</strong><br>
+                商談前、移動中、飲み会前。必要な時だけ眺めればいい。知識量より、沈黙を回避できることが価値。
+              </div>
+            </div>
           </div>
-        </div>
 
-        <a class="cta" href="#" id="paymentButton">このまま続ける</a>
-        <a class="sub-cta" href="#">無料プランのまま使う</a>
+          <div class="section">
+            <div class="section-title">BEFORE / AFTER</div>
+            <div class="compare-grid">
+              <div class="compare-card bad">
+                <div class="compare-label">Before</div>
+                <strong>取引先「最近の金利、どうなりそうですかね？」</strong>
+                <p>
+                  あなた「えーっと、上がりそうですよね……」<br><br>
+                  そこで止まる。浅く終わる。空気が途切れる。<br>
+                  <span style="color:#ffd5df">→ 「あんまり見てない人かな」と思われやすい。</span>
+                </p>
+              </div>
+              <div class="compare-card good">
+                <div class="compare-label">After</div>
+                <strong>取引先「最近の金利、どうなりそうですかね？」</strong>
+                <p>
+                  あなた「住宅ローンへの影響、気になりますよね。昨日の話だと……」<br><br>
+                  今朝の10秒予習をそのまま使うだけ。<br>
+                  <span style="color:#cbffe9">→ 「アンテナ高いですね」に変わる。</span>
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <div class="trust">
-          <div class="trust-item"><strong>決済について</strong></div>
-          <div class="trust-item">・このボタンの遷移先に Stripe か LINE公式の決済ページを接続する想定。</div>
-          <div class="trust-item">・登録後は bot 側で membership_status を更新して機能開放。</div>
-          <div class="trust-item">・停止は次回更新日前までに行えばOK、みたいな文言を本番仕様に合わせて差し替えればいい。</div>
-          <div class="trust-item"><span class="warn">※</span><span>現状はデモ。実際の課金導線URLは未接続。</span></div>
-        </div>
+          <div class="section">
+            <div class="section-title">このbotでできること</div>
+            <div class="benefit-grid">
+              <div class="benefit-card">
+                <strong>ニュースを会話向けに変換</strong>
+                <p>見出しだけじゃなく、切り出し方、重要ポイント、会話に使う角度まで出る。</p>
+              </div>
+              <div class="benefit-card">
+                <strong>「詳しく」で知ったかぶりを深さに変える</strong>
+                <p>浅い知識で止まるのが一番危ない。相手が食いついた時の二の矢まで準備できる。</p>
+              </div>
+              <div class="benefit-card">
+                <strong>相手に合わせた話題が出せる</strong>
+                <p>彼女、上司、お客さんなど、誰と話すかに合わせて角度を変えられる。</p>
+              </div>
+              <div class="benefit-card">
+                <strong>LINEの中だけで完結</strong>
+                <p>アプリを切り替えない。調べ直さない。その場で投げて、その場で答えが返る。</p>
+              </div>
+            </div>
+          </div>
 
-        <div class="foot">
-          特定商取引法に基づく表記 / 利用規約 / プライバシーポリシー は
-          本番公開時にフッターへリンク追加推奨。
-        </div>
-      </aside>
+          <div class="section">
+            <div class="section-title">向いている人</div>
+            <div class="timeline">
+              <div class="timeline-card">
+                <strong>営業・接客・商談がある人</strong>
+                <p>雑談の入りで詰まりたくない。相手との空気を切りたくない。そういう人に一番刺さる。</p>
+              </div>
+              <div class="timeline-card">
+                <strong>ニュースを追うのが面倒な人</strong>
+                <p>深く勉強したいわけじゃない。でも無知っぽく見られるのは避けたい。その中間にちょうどいい。</p>
+              </div>
+              <div class="timeline-card">
+                <strong>話題に困りたくない人</strong>
+                <p>飲み会、初対面、ちょっとした移動。沈黙を埋める手札が欲しい人向け。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="right-col">
+          <div class="card plan">
+            <div class="price-kicker">
+              <div>
+                <h2>メンバーシップ登録</h2>
+                <p>1日わずか数十円で、<strong style="color:#fff">「話題に困らない人」</strong>という評価を買う。</p>
+              </div>
+              <div class="plan-tag">月額</div>
+            </div>
+
+            <div class="price-box">
+              <div class="price-main">
+                <div class="num">400円</div>
+                <div class="unit">/ 月額・税込</div>
+              </div>
+              <div class="price-note">
+                朝夜の配信、追加ニュース、深掘り、会話ネタ、相手別の話題づくりまでまとめて使える。
+              </div>
+            </div>
+
+            <div class="micro-copy">
+              これで、明日の商談の沈黙はなくなる。
+            </div>
+
+            <div class="summary">
+              <div class="row"><span>朝5時の話題配信</span><strong>使える</strong></div>
+              <div class="row"><span>「詳しく」で深掘り</span><strong>使える</strong></div>
+              <div class="row"><span>相手別の話題出し</span><strong>使える</strong></div>
+              <div class="row"><span>更新</span><strong>毎月自動</strong></div>
+              <div class="row total"><span>お支払い合計</span><strong>400円</strong></div>
+            </div>
+
+            <div style="display:grid; gap:12px; margin-top:18px;">
+              <a class="cta" href="#" id="paymentButton">今すぐ沈黙を回避する</a>
+              <a class="sub-cta" href="#faq">先に細かい説明を見る</a>
+            </div>
+
+            <div class="small" style="margin-top:14px;">
+              決済完了後、そのままLINE側の機能を開放する想定。<br>
+              実際の課金導線URLに差し替えればそのまま使える。
+            </div>
+          </div>
+
+          <div class="card plan" id="faq">
+            <div class="section-title">よくある不安</div>
+            <div class="faq">
+              <div class="faq-card">
+                <strong>ニュースを勉強する時間ないんだが？</strong>
+                <p>読む前提じゃない。朝5時に届く内容を10秒眺めれば十分。必要な時だけ深掘りすればいい。</p>
+              </div>
+              <div class="faq-card">
+                <strong>浅い知識で話してボロ出ない？</strong>
+                <p>そこを埋めるのが「詳しく」。相手が食いついた時の2発目、3発目まで用意できる。</p>
+              </div>
+              <div class="faq-card">
+                <strong>結局何が一番いいの？</strong>
+                <p>ニュースを追うストレスより、気まずい沈黙の恐怖を消せること。価値はそこ。</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="footer-note">
+        特定商取引法に基づく表記 / 利用規約 / プライバシーポリシー は本番公開時に追加。<br>
+        ボタンの href と JavaScript 内の URL を実際の決済先に差し替えれば使える。
+      </div>
     </div>
   </div>
 
   <script>
-    document.getElementById('paymentButton').addEventListener('click', function (e) {
-      e.preventDefault();
-      alert('ここに決済URLを接続');
+    const paymentUrl = "#"; // ここに決済URLを入れる
+    const paymentButton = document.getElementById("paymentButton");
+
+    paymentButton.addEventListener("click", function(e){
+      if (!paymentUrl || paymentUrl === "#") {
+        e.preventDefault();
+        alert("ここに決済URLを接続");
+      }
     });
   </script>
 </body>
