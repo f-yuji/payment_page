@@ -1,467 +1,594 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>沈黙を回避するLINEニュースbot | メンバーシップ登録</title>
   <meta name="description" content="朝5時に届く10秒の予習。ニュースを会話で使える形に変えて、商談・雑談・飲み会の気まずい沈黙を回避するLINEニュースbot。" />
   <style>
-    :root{
-      --bg:#09111f;
-      --bg-2:#0e172a;
-      --card:#101b31;
-      --card-2:#13203a;
-      --line:rgba(255,255,255,.10);
-      --text:#eef4ff;
-      --muted:#aab7d1;
-      --sub:#7f8daa;
-      --accent:#58a6ff;
-      --accent-2:#7c4dff;
-      --good:#34d399;
-      --warn:#fbbf24;
-      --danger:#fb7185;
-      --shadow:0 30px 80px rgba(0,0,0,.34);
-      --radius:24px;
-      --radius-sm:18px;
-      --max:1180px;
+    :root {
+      --bg: #09111f;
+      --bg-2: #0e172a;
+      --card: #101b31;
+      --card-2: #13203a;
+      --line: rgba(255, 255, 255, .10);
+      --text: #eef4ff;
+      --muted: #aab7d1;
+      --sub: #7f8daa;
+      --accent: #58a6ff;
+      --accent-2: #7c4dff;
+      --good: #34d399;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+      --shadow: 0 30px 80px rgba(0, 0, 0, .34);
+      --radius: 24px;
+      --radius-sm: 18px;
+      --max: 1180px;
     }
 
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
       background:
-        radial-gradient(circle at 0% 0%, rgba(88,166,255,.16), transparent 28%),
-        radial-gradient(circle at 100% 10%, rgba(124,77,255,.18), transparent 26%),
-        radial-gradient(circle at 50% 100%, rgba(52,211,153,.08), transparent 22%),
+        radial-gradient(circle at 0% 0%, rgba(88, 166, 255, .16), transparent 28%),
+        radial-gradient(circle at 100% 10%, rgba(124, 77, 255, .18), transparent 26%),
+        radial-gradient(circle at 50% 100%, rgba(52, 211, 153, .08), transparent 22%),
         linear-gradient(180deg, var(--bg) 0%, #08101d 45%, #07101b 100%);
-      min-height:100vh;
+      min-height: 100vh;
     }
 
-    a{color:inherit;text-decoration:none}
-    .container{width:min(calc(100% - 32px), var(--max)); margin:0 auto}
-    .hero-wrap{padding:32px 0 24px}
-    .shell{
-      display:grid;
-      grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);
-      gap:24px;
-      align-items:start;
+    a {
+      color: inherit;
+      text-decoration: none
     }
 
-    .card{
-      background:linear-gradient(180deg, rgba(19,32,58,.92), rgba(12,23,43,.96));
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
+    .container {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto
     }
 
-    .hero{padding:40px}
-    .badge-row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.02em;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      color:#dbe8ff;
-    }
-    .badge.hot{
-      background:rgba(251,113,133,.12);
-      color:#ffd5df;
-      border-color:rgba(251,113,133,.24);
+    .hero-wrap {
+      padding: 32px 0 24px
     }
 
-    h1{
-      margin:18px 0 14px;
-      font-size:clamp(34px,5vw,68px);
-      line-height:1.02;
-      letter-spacing:-.05em;
-    }
-    .headline-accent{
-      display:block;
-      background:linear-gradient(135deg, #ffffff 10%, #9ed0ff 45%, #b99cff 100%);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-    }
-    .lead{
-      margin:0;
-      font-size:17px;
-      line-height:1.95;
-      color:var(--muted);
-      max-width:760px;
-    }
-    .fear-box{
-      margin-top:22px;
-      padding:18px 20px;
-      border-radius:20px;
-      background:linear-gradient(180deg, rgba(251,113,133,.10), rgba(251,113,133,.04));
-      border:1px solid rgba(251,113,133,.18);
-      color:#ffe2e8;
-      line-height:1.8;
-      font-size:14px;
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr);
+      gap: 24px;
+      align-items: start;
     }
 
-    .hero-grid{
-      margin-top:28px;
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0,1fr));
-      gap:14px;
-    }
-    .mini-card{
-      padding:18px;
-      border-radius:20px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-    }
-    .mini-label{
-      color:#dfe8fb;
-      font-size:14px;
-      font-weight:800;
-      margin-bottom:8px;
-    }
-    .mini-card p{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.8;
+    .card {
+      background: linear-gradient(180deg, rgba(19, 32, 58, .92), rgba(12, 23, 43, .96));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
 
-    .phone{
-      margin-top:26px;
-      display:grid;
-      grid-template-columns:300px 1fr;
-      gap:18px;
-      align-items:center;
-    }
-    .phone-frame{
-      border-radius:32px;
-      background:#050b15;
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 20px 60px rgba(0,0,0,.40);
-      padding:14px;
-    }
-    .phone-screen{
-      border-radius:24px;
-      overflow:hidden;
-      background:linear-gradient(180deg,#0d1526,#091120);
-      border:1px solid rgba(255,255,255,.06);
-    }
-    .phone-top{
-      padding:12px 16px 8px;
-      font-size:12px;
-      color:#dbe6ff;
-      display:flex;
-      justify-content:space-between;
-      opacity:.92;
-    }
-    .chat-head{
-      padding:12px 16px;
-      border-top:1px solid rgba(255,255,255,.04);
-      border-bottom:1px solid rgba(255,255,255,.04);
-      background:rgba(255,255,255,.02);
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-size:13px;
-      font-weight:700;
-    }
-    .avatar{
-      width:32px;height:32px;border-radius:999px;
-      display:grid;place-items:center;
-      background:linear-gradient(135deg,#58a6ff,#7c4dff);
-      color:#fff;font-size:13px;font-weight:900;
-    }
-    .chat-body{padding:16px; display:grid; gap:12px}
-    .bubble{
-      max-width:88%;
-      padding:12px 14px;
-      border-radius:18px;
-      line-height:1.75;
-      font-size:13px;
-      white-space:pre-line;
-    }
-    .bubble.left{
-      background:#16233d;
-      border:1px solid rgba(255,255,255,.06);
-      color:#eef4ff;
-      border-top-left-radius:8px;
-    }
-    .bubble.right{
-      margin-left:auto;
-      background:linear-gradient(135deg,#58a6ff,#7c4dff);
-      color:#fff;
-      border-top-right-radius:8px;
+    .hero {
+      padding: 40px
     }
 
-    .phone-copy{
-      display:grid;
-      gap:14px;
-    }
-    .quote{
-      padding:16px 18px;
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid var(--line);
-      color:var(--muted);
-      line-height:1.9;
-      font-size:14px;
-    }
-    .quote strong{color:#fff}
-
-    .right-col{
-      position:sticky;
-      top:24px;
-      display:grid;
-      gap:16px;
-    }
-    .plan{padding:24px}
-    .price-kicker{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:start;
-      margin-bottom:14px;
-    }
-    .plan-tag{
-      padding:7px 11px;
-      border-radius:999px;
-      background:rgba(52,211,153,.12);
-      color:#c9ffea;
-      border:1px solid rgba(52,211,153,.24);
-      font-size:12px;
-      font-weight:800;
-      white-space:nowrap;
-    }
-    .plan h2{
-      margin:0;
-      font-size:24px;
-      line-height:1.2;
-      letter-spacing:-.03em;
-    }
-    .plan p{
-      margin:10px 0 0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.85;
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center
     }
 
-    .price-box{
-      margin-top:20px;
-      padding:18px;
-      border-radius:20px;
-      background:linear-gradient(180deg, rgba(88,166,255,.12), rgba(124,77,255,.10));
-      border:1px solid rgba(88,166,255,.18);
-    }
-    .price-main{
-      display:flex;
-      align-items:end;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .price-main .num{
-      font-size:48px;
-      line-height:1;
-      font-weight:900;
-      letter-spacing:-.05em;
-      color:#fff;
-    }
-    .price-main .unit{
-      color:#d3def7;
-      font-size:15px;
-      padding-bottom:7px;
-    }
-    .price-note{
-      margin-top:8px;
-      color:#dbe8ff;
-      font-size:13px;
-      line-height:1.8;
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      border: 1px solid rgba(255, 255, 255, .10);
+      background: rgba(255, 255, 255, .04);
+      color: #dbe8ff;
     }
 
-    .micro-copy{
-      margin-top:14px;
-      padding:12px 14px;
-      border-radius:16px;
-      background:rgba(251,191,36,.08);
-      border:1px solid rgba(251,191,36,.18);
-      color:#ffe9b0;
-      font-size:13px;
-      line-height:1.75;
-      font-weight:700;
+    .badge.hot {
+      background: rgba(251, 113, 133, .12);
+      color: #ffd5df;
+      border-color: rgba(251, 113, 133, .24);
     }
 
-    .summary{
-      margin-top:16px;
-      display:grid;
-      gap:12px;
-      font-size:14px;
-    }
-    .row{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      color:var(--muted);
-    }
-    .row strong{color:#fff}
-    .row.total{
-      padding-top:14px;
-      border-top:1px dashed rgba(255,255,255,.12);
-      font-size:18px;
-      font-weight:900;
-      color:#fff;
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(34px, 5vw, 68px);
+      line-height: 1.02;
+      letter-spacing: -.05em;
     }
 
-    .cta{
-      width:100%;
-      min-height:58px;
-      display:inline-flex;
-      justify-content:center;
-      align-items:center;
-      border-radius:18px;
-      background:linear-gradient(135deg,#5db0ff 0%, #7c4dff 60%, #8e44ff 100%);
-      color:#fff;
-      font-size:16px;
-      font-weight:900;
-      letter-spacing:.01em;
-      box-shadow:0 16px 40px rgba(88,166,255,.28);
-      transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-    }
-    .cta:hover{transform:translateY(-1px); box-shadow:0 20px 44px rgba(88,166,255,.36)}
-    .cta:active{transform:translateY(0)}
-    .sub-cta{
-      width:100%;
-      min-height:48px;
-      display:inline-flex;
-      justify-content:center;
-      align-items:center;
-      border-radius:16px;
-      border:1px solid var(--line);
-      color:#e6efff;
-      background:rgba(255,255,255,.03);
-      font-size:14px;
-      font-weight:700;
+    .headline-accent {
+      display: block;
+      background: linear-gradient(135deg, #ffffff 10%, #9ed0ff 45%, #b99cff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
-    .small{
-      color:var(--sub);
-      font-size:12px;
-      line-height:1.8;
-      text-align:center;
+    .lead {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.95;
+      color: var(--muted);
+      max-width: 760px;
     }
 
-    .section{
-      padding:12px 0 0;
-    }
-    .section-title{
-      font-size:14px;
-      font-weight:900;
-      letter-spacing:.04em;
-      color:#cddcff;
-      margin-bottom:14px;
+    .fear-box {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(251, 113, 133, .10), rgba(251, 113, 133, .04));
+      border: 1px solid rgba(251, 113, 133, .18);
+      color: #ffe2e8;
+      line-height: 1.8;
+      font-size: 14px;
     }
 
-    .timeline, .compare, .benefits, .faq{
-      display:grid;
-      gap:14px;
+    .hero-grid {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
     }
-    .timeline-card, .compare-card, .benefit-card, .faq-card{
-      padding:20px;
-      border-radius:20px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
+
+    .mini-card {
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .03);
     }
+
+    .mini-label {
+      color: #dfe8fb;
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .mini-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .phone {
+      margin-top: 26px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .phone-frame {
+      border-radius: 32px;
+      background: #050b15;
+      border: 1px solid rgba(255, 255, 255, .08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .40);
+      padding: 14px;
+    }
+
+    .phone-screen {
+      border-radius: 24px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #0d1526, #091120);
+      border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .phone-top {
+      padding: 12px 16px 8px;
+      font-size: 12px;
+      color: #dbe6ff;
+      display: flex;
+      justify-content: space-between;
+      opacity: .92;
+    }
+
+    .chat-head {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, .04);
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      background: rgba(255, 255, 255, .02);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #58a6ff, #7c4dff);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .chat-body {
+      padding: 16px;
+      display: grid;
+      gap: 12px
+    }
+
+    .bubble {
+      max-width: 88%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      line-height: 1.75;
+      font-size: 13px;
+      white-space: pre-line;
+    }
+
+    .bubble.left {
+      background: #16233d;
+      border: 1px solid rgba(255, 255, 255, .06);
+      color: #eef4ff;
+      border-top-left-radius: 8px;
+    }
+
+    .bubble.right {
+      margin-left: auto;
+      background: linear-gradient(135deg, #58a6ff, #7c4dff);
+      color: #fff;
+      border-top-right-radius: 8px;
+    }
+
+    .phone-copy {
+      display: grid;
+      gap: 14px;
+    }
+
+    .quote {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      line-height: 1.9;
+      font-size: 14px;
+    }
+
+    .quote strong {
+      color: #fff
+    }
+
+    .right-col {
+      position: sticky;
+      top: 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .plan {
+      padding: 24px
+    }
+
+    .price-kicker {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+
+    .plan-tag {
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(52, 211, 153, .12);
+      color: #c9ffea;
+      border: 1px solid rgba(52, 211, 153, .24);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .plan h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: -.03em;
+    }
+
+    .plan p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.85;
+    }
+
+    .price-box {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(88, 166, 255, .12), rgba(124, 77, 255, .10));
+      border: 1px solid rgba(88, 166, 255, .18);
+    }
+
+    .price-main {
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .price-main .num {
+      font-size: 48px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -.05em;
+      color: #fff;
+    }
+
+    .price-main .unit {
+      color: #d3def7;
+      font-size: 15px;
+      padding-bottom: 7px;
+    }
+
+    .price-note {
+      margin-top: 8px;
+      color: #dbe8ff;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .micro-copy {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(251, 191, 36, .08);
+      border: 1px solid rgba(251, 191, 36, .18);
+      color: #ffe9b0;
+      font-size: 13px;
+      line-height: 1.75;
+      font-weight: 700;
+    }
+
+    .summary {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .row strong {
+      color: #fff
+    }
+
+    .row.total {
+      padding-top: 14px;
+      border-top: 1px dashed rgba(255, 255, 255, .12);
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .cta {
+      width: 100%;
+      min-height: 58px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #5db0ff 0%, #7c4dff 60%, #8e44ff 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: .01em;
+      box-shadow: 0 16px 40px rgba(88, 166, 255, .28);
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+
+    .cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 20px 44px rgba(88, 166, 255, .36)
+    }
+
+    .cta:active {
+      transform: translateY(0)
+    }
+
+    .sub-cta {
+      width: 100%;
+      min-height: 48px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      color: #e6efff;
+      background: rgba(255, 255, 255, .03);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .small {
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .section {
+      padding: 12px 0 0;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      color: #cddcff;
+      margin-bottom: 14px;
+    }
+
+    .timeline,
+    .compare,
+    .benefits,
+    .faq {
+      display: grid;
+      gap: 14px;
+    }
+
+    .timeline-card,
+    .compare-card,
+    .benefit-card,
+    .faq-card {
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .03);
+    }
+
     .timeline-card strong,
     .compare-card strong,
     .benefit-card strong,
-    .faq-card strong{
-      display:block;
-      color:#fff;
-      margin-bottom:8px;
-      font-size:16px;
+    .faq-card strong {
+      display: block;
+      color: #fff;
+      margin-bottom: 8px;
+      font-size: 16px;
     }
+
     .timeline-card p,
     .compare-card p,
     .benefit-card p,
-    .faq-card p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.9;
-      font-size:14px;
+    .faq-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.9;
+      font-size: 14px;
     }
 
-    .compare-grid{
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:14px;
-    }
-    .compare-card.bad{
-      background:linear-gradient(180deg, rgba(251,113,133,.08), rgba(255,255,255,.02));
-      border-color:rgba(251,113,133,.20);
-    }
-    .compare-card.good{
-      background:linear-gradient(180deg, rgba(52,211,153,.08), rgba(255,255,255,.02));
-      border-color:rgba(52,211,153,.20);
-    }
-    .compare-label{
-      display:inline-flex;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-      margin-bottom:12px;
-    }
-    .compare-card.bad .compare-label{
-      background:rgba(251,113,133,.12);
-      color:#ffd5df;
-    }
-    .compare-card.good .compare-label{
-      background:rgba(52,211,153,.12);
-      color:#cbffe9;
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
     }
 
-    .benefit-grid{
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:14px;
+    .compare-card.bad {
+      background: linear-gradient(180deg, rgba(251, 113, 133, .08), rgba(255, 255, 255, .02));
+      border-color: rgba(251, 113, 133, .20);
     }
 
-    .footer-note{
-      margin:34px 0 56px;
-      color:var(--sub);
-      text-align:center;
-      font-size:12px;
-      line-height:1.8;
+    .compare-card.good {
+      background: linear-gradient(180deg, rgba(52, 211, 153, .08), rgba(255, 255, 255, .02));
+      border-color: rgba(52, 211, 153, .20);
     }
 
-    @media (max-width: 1024px){
-      .shell{grid-template-columns:1fr}
-      .right-col{position:static}
-      .phone{grid-template-columns:1fr}
+    .compare-label {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 12px;
     }
 
-    @media (max-width: 720px){
-      .hero{padding:24px}
-      .plan{padding:20px}
-      .hero-grid, .benefit-grid, .compare-grid{grid-template-columns:1fr}
-      h1{font-size:clamp(30px, 11vw, 48px)}
-      .lead{font-size:15px}
+    .compare-card.bad .compare-label {
+      background: rgba(251, 113, 133, .12);
+      color: #ffd5df;
+    }
+
+    .compare-card.good .compare-label {
+      background: rgba(52, 211, 153, .12);
+      color: #cbffe9;
+    }
+
+    .benefit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .footer-note {
+      margin: 34px 0 56px;
+      color: var(--sub);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .badge.free {
+      background: rgba(52, 211, 153, .12);
+      color: #cbffe9;
+      border-color: rgba(52, 211, 153, .24);
+    }
+
+    @media (max-width: 1024px) {
+      .shell {
+        grid-template-columns: 1fr
+      }
+
+      .right-col {
+        position: static
+      }
+
+      .phone {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding: 24px
+      }
+
+      .plan {
+        padding: 20px
+      }
+
+      .hero-grid,
+      .benefit-grid,
+      .compare-grid {
+        grid-template-columns: 1fr
+      }
+
+      h1 {
+        font-size: clamp(30px, 11vw, 48px)
+      }
+
+      .lead {
+        font-size: 15px
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="hero-wrap">
     <div class="container">
       <div class="shell">
         <section class="card hero">
           <div class="badge-row">
+            <div class="badge free">無料でも使える</div>
             <div class="badge hot">朝5時に届く10秒の予習</div>
             <div class="badge">LINE完結</div>
             <div class="badge">商談・雑談・飲み会で使える</div>
@@ -515,16 +642,16 @@
                 <div class="chat-body">
                   <div class="bubble left">今日のニュース、ここだけ。
 
-①［金利］
-住宅ローンへの影響が話題
-👉 家計に効きそう
+                    ①［金利］
+                    住宅ローンへの影響が話題
+                    👉 家計に効きそう
 
-②［AI］
-生成AIの新機能
-👉 仕事で使う人さらに増えそう</div>
+                    ②［AI］
+                    生成AIの新機能
+                    👉 仕事で使う人さらに増えそう</div>
                   <div class="bubble right">詳しく</div>
                   <div class="bubble left">最近の金利は、住宅ローンや家計への影響で会話にしやすい。
-「変動金利の人、気になりますよね」で入りやすい。</div>
+                    「変動金利の人、気になりますよね」で入りやすい。</div>
                 </div>
               </div>
             </div>
@@ -610,10 +737,36 @@
           <div class="card plan">
             <div class="price-kicker">
               <div>
-                <h2>メンバーシップ登録</h2>
-                <p>1日わずか１３円で、<strong style="color:#fff">「話題に困らない人」</strong>という評価を買う。</p>
+                <h2>無料でも使える / メンバーシップでフル解放</h2>
+                <p>まずは無料で試せる。必要になったら、メンバーシップで深掘りや追加機能まで使える。</p>
               </div>
-              <div class="plan-tag">月額</div>
+              <div class="plan-tag">無料あり</div>
+            </div>
+
+            <div class="price-box" style="margin-bottom:14px;">
+              <div class="price-main">
+                <div class="num">無料</div>
+                <div class="unit">/ 0円</div>
+              </div>
+              <div class="price-note">
+                朝の話題配信や基本のニュース要約など、無料のままでも使える。
+              </div>
+            </div>
+            <div class="micro-copy">
+              これで、今日の商談の沈黙はなくなる。
+            </div>
+            <!-- 無料プラン -->
+            <div class="summary" style="margin-bottom:14px;">
+              <div class="row"><span>朝5時の話題配信</span><strong>使える</strong></div>
+              <div class="row"><span>ニュース要約（基本）</span><strong>使える</strong></div>
+              <div class="row"><span>「詳しく」で簡易解説</span><strong>一部可</strong></div>
+              <div class="row"><span>追加ニュース</span><strong>制限あり</strong></div>
+              <div class="row"><span>相手別の話題出し</span><strong>制限あり</strong></div>
+              <div class="row total"><span>料金</span><strong>無料</strong></div>
+            </div>
+
+            <div class="small" style="margin-bottom:16px;">
+              無料のままでも使える。まず試してからでOK。
             </div>
 
             <div class="price-box">
@@ -626,10 +779,7 @@
               </div>
             </div>
 
-            <div class="micro-copy">
-              これで、今日の商談の沈黙はなくなる。
-            </div>
-
+            <!-- 有料プラン -->
             <div class="summary">
               <div class="row"><span>朝5時の話題配信 + 夜配信</span><strong>使える</strong></div>
               <div class="row"><span>長いニュースを一口サイズに要約</span><strong>使える</strong></div>
@@ -640,7 +790,12 @@
             </div>
 
             <div style="display:grid; gap:12px; margin-top:18px;">
-              <a class="cta" href="#" id="paymentButton">今すぐ沈黙を回避する</a>
+              <a class="cta" href="#" id="paymentButton">有料でフル解放する</a>
+            </div>
+
+            <div class="small" style="margin-top:14px;">
+              無料でも使えるが、制限あり。<br>
+              必要になったら有料に切り替えればOK。
             </div>
 
             <div class="small" style="margin-top:14px;">
@@ -680,7 +835,7 @@
     const paymentUrl = "#"; // ここに決済URLを入れる
     const paymentButton = document.getElementById("paymentButton");
 
-    paymentButton.addEventListener("click", function(e){
+    paymentButton.addEventListener("click", function (e) {
       if (!paymentUrl || paymentUrl === "#") {
         e.preventDefault();
         alert("ここに決済URLを接続");
@@ -688,4 +843,5 @@
     });
   </script>
 </body>
+
 </html>
