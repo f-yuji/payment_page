@@ -792,6 +792,7 @@
             <div style="display:grid; gap:12px; margin-top:18px;">
               <a class="cta" href="#" id="paymentButton">有料でフル解放する</a>
             </div>
+            <div class="small" id="paymentStatus" style="margin-top:12px;"></div>
 
             <div class="small" style="margin-top:14px;">
               無料でも使えるが、制限あり。<br>
@@ -838,13 +839,29 @@
   </div>
 
   <script>
-    const paymentUrl = "#"; // ここに決済URLを入れる
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("user_id");
+    const billingBase = params.get("billing_base");
     const paymentButton = document.getElementById("paymentButton");
+    const paymentStatus = document.getElementById("paymentStatus");
+
+    let paymentUrl = "#";
+
+    if (userId && billingBase) {
+      paymentUrl = `${billingBase.replace(/\/$/, "")}/billing?${new URLSearchParams({ user_id: userId }).toString()}`;
+      paymentButton.href = paymentUrl;
+      paymentStatus.textContent = "LINEからのアクセスを確認した。ボタンを押すと決済画面に進める。";
+    } else {
+      paymentButton.setAttribute("aria-disabled", "true");
+      paymentButton.style.opacity = "0.45";
+      paymentButton.style.cursor = "not-allowed";
+      paymentStatus.textContent = "このページ単体では課金できない。LINEの案内から開いてくれ。";
+    }
 
     paymentButton.addEventListener("click", function (e) {
       if (!paymentUrl || paymentUrl === "#") {
         e.preventDefault();
-        alert("ここに決済URLを接続");
+        alert("LINEの案内からアクセスすると申込できる。");
       }
     });
   </script>
