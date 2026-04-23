@@ -1,870 +1,1596 @@
 <!doctype html>
 <html lang="ja">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>沈黙を回避するLINEニュースbot | メンバーシップ登録</title>
-  <meta name="description" content="朝5時に届く10秒の予習。ニュースを会話で使える形に変えて、商談・雑談・飲み会の気まずい沈黙を回避するLINEニュースbot。" />
-  <style>
-    :root {
-      --bg: #09111f;
-      --bg-2: #0e172a;
-      --card: #101b31;
-      --card-2: #13203a;
-      --line: rgba(255, 255, 255, .10);
-      --text: #eef4ff;
-      --muted: #aab7d1;
-      --sub: #7f8daa;
-      --accent: #58a6ff;
-      --accent-2: #7c4dff;
-      --good: #34d399;
-      --warn: #fbbf24;
-      --danger: #fb7185;
-      --shadow: 0 30px 80px rgba(0, 0, 0, .34);
-      --radius: 24px;
-      --radius-sm: 18px;
-      --max: 1180px;
-    }
-
-    * {
-      box-sizing: border-box
-    }
-
-    html {
-      scroll-behavior: smooth
-    }
-
-    body {
-      margin: 0;
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-      background:
-        radial-gradient(circle at 0% 0%, rgba(88, 166, 255, .16), transparent 28%),
-        radial-gradient(circle at 100% 10%, rgba(124, 77, 255, .18), transparent 26%),
-        radial-gradient(circle at 50% 100%, rgba(52, 211, 153, .08), transparent 22%),
-        linear-gradient(180deg, var(--bg) 0%, #08101d 45%, #07101b 100%);
-      min-height: 100vh;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none
-    }
-
-    .container {
-      width: min(calc(100% - 32px), var(--max));
-      margin: 0 auto
-    }
-
-    .hero-wrap {
-      padding: 32px 0 24px
-    }
-
-    .shell {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr);
-      gap: 24px;
-      align-items: start;
-    }
-
-    .card {
-      background: linear-gradient(180deg, rgba(19, 32, 58, .92), rgba(12, 23, 43, .96));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
-    .hero {
-      padding: 40px
-    }
-
-    .badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .02em;
-      border: 1px solid rgba(255, 255, 255, .10);
-      background: rgba(255, 255, 255, .04);
-      color: #dbe8ff;
-    }
-
-    .badge.hot {
-      background: rgba(251, 113, 133, .12);
-      color: #ffd5df;
-      border-color: rgba(251, 113, 133, .24);
-    }
-
-    h1 {
-      margin: 18px 0 14px;
-      font-size: clamp(34px, 5vw, 68px);
-      line-height: 1.02;
-      letter-spacing: -.05em;
-    }
-
-    .headline-accent {
-      display: block;
-      background: linear-gradient(135deg, #ffffff 10%, #9ed0ff 45%, #b99cff 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .lead {
-      margin: 0;
-      font-size: 17px;
-      line-height: 1.95;
-      color: var(--muted);
-      max-width: 760px;
-    }
-
-    .fear-box {
-      margin-top: 22px;
-      padding: 18px 20px;
-      border-radius: 20px;
-      background: linear-gradient(180deg, rgba(251, 113, 133, .10), rgba(251, 113, 133, .04));
-      border: 1px solid rgba(251, 113, 133, .18);
-      color: #ffe2e8;
-      line-height: 1.8;
-      font-size: 14px;
-    }
-
-    .hero-grid {
-      margin-top: 28px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .mini-card {
-      padding: 18px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .03);
-    }
-
-    .mini-label {
-      color: #dfe8fb;
-      font-size: 14px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .mini-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.8;
-    }
-
-    .phone {
-      margin-top: 26px;
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 18px;
-      align-items: center;
-    }
-
-    .phone-frame {
-      border-radius: 32px;
-      background: #050b15;
-      border: 1px solid rgba(255, 255, 255, .08);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, .40);
-      padding: 14px;
-    }
-
-    .phone-screen {
-      border-radius: 24px;
-      overflow: hidden;
-      background: linear-gradient(180deg, #0d1526, #091120);
-      border: 1px solid rgba(255, 255, 255, .06);
-    }
-
-    .phone-top {
-      padding: 12px 16px 8px;
-      font-size: 12px;
-      color: #dbe6ff;
-      display: flex;
-      justify-content: space-between;
-      opacity: .92;
-    }
-
-    .chat-head {
-      padding: 12px 16px;
-      border-top: 1px solid rgba(255, 255, 255, .04);
-      border-bottom: 1px solid rgba(255, 255, 255, .04);
-      background: rgba(255, 255, 255, .02);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #58a6ff, #7c4dff);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 900;
-    }
-
-    .chat-body {
-      padding: 16px;
-      display: grid;
-      gap: 12px
-    }
-
-    .bubble {
-      max-width: 88%;
-      padding: 12px 14px;
-      border-radius: 18px;
-      line-height: 1.75;
-      font-size: 13px;
-      white-space: pre-line;
-    }
-
-    .bubble.left {
-      background: #16233d;
-      border: 1px solid rgba(255, 255, 255, .06);
-      color: #eef4ff;
-      border-top-left-radius: 8px;
-    }
-
-    .bubble.right {
-      margin-left: auto;
-      background: linear-gradient(135deg, #58a6ff, #7c4dff);
-      color: #fff;
-      border-top-right-radius: 8px;
-    }
-
-    .phone-copy {
-      display: grid;
-      gap: 14px;
-    }
-
-    .quote {
-      padding: 16px 18px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, .03);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      line-height: 1.9;
-      font-size: 14px;
-    }
-
-    .quote strong {
-      color: #fff
-    }
-
-    .right-col {
-      position: sticky;
-      top: 24px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .plan {
-      padding: 24px
-    }
-
-    .price-kicker {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: start;
-      margin-bottom: 14px;
-    }
-
-    .plan-tag {
-      padding: 7px 11px;
-      border-radius: 999px;
-      background: rgba(52, 211, 153, .12);
-      color: #c9ffea;
-      border: 1px solid rgba(52, 211, 153, .24);
-      font-size: 12px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .plan h2 {
-      margin: 0;
-      font-size: 24px;
-      line-height: 1.2;
-      letter-spacing: -.03em;
-    }
-
-    .plan p {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.85;
-    }
-
-    .price-box {
-      margin-top: 20px;
-      padding: 18px;
-      border-radius: 20px;
-      background: linear-gradient(180deg, rgba(88, 166, 255, .12), rgba(124, 77, 255, .10));
-      border: 1px solid rgba(88, 166, 255, .18);
-    }
-
-    .price-main {
-      display: flex;
-      align-items: end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .price-main .num {
-      font-size: 48px;
-      line-height: 1;
-      font-weight: 900;
-      letter-spacing: -.05em;
-      color: #fff;
-    }
-
-    .price-main .unit {
-      color: #d3def7;
-      font-size: 15px;
-      padding-bottom: 7px;
-    }
-
-    .price-note {
-      margin-top: 8px;
-      color: #dbe8ff;
-      font-size: 13px;
-      line-height: 1.8;
-    }
-
-    .micro-copy {
-      margin-top: 14px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(251, 191, 36, .08);
-      border: 1px solid rgba(251, 191, 36, .18);
-      color: #ffe9b0;
-      font-size: 13px;
-      line-height: 1.75;
-      font-weight: 700;
-    }
-
-    .summary {
-      margin-top: 16px;
-      display: grid;
-      gap: 12px;
-      font-size: 14px;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--muted);
-    }
-
-    .row strong {
-      color: #fff
-    }
-
-    .row.total {
-      padding-top: 14px;
-      border-top: 1px dashed rgba(255, 255, 255, .12);
-      font-size: 18px;
-      font-weight: 900;
-      color: #fff;
-    }
-
-    .cta {
-      width: 100%;
-      min-height: 58px;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #5db0ff 0%, #7c4dff 60%, #8e44ff 100%);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing: .01em;
-      box-shadow: 0 16px 40px rgba(88, 166, 255, .28);
-      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-    }
-
-    .cta:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 20px 44px rgba(88, 166, 255, .36)
-    }
-
-    .cta:active {
-      transform: translateY(0)
-    }
-
-    .sub-cta {
-      width: 100%;
-      min-height: 48px;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      color: #e6efff;
-      background: rgba(255, 255, 255, .03);
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .small {
-      color: var(--sub);
-      font-size: 12px;
-      line-height: 1.8;
-      text-align: center;
-    }
-
-    .section {
-      padding: 12px 0 0;
-    }
-
-    .section-title {
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: .04em;
-      color: #cddcff;
-      margin-bottom: 14px;
-    }
-
-    .timeline,
-    .compare,
-    .benefits,
-    .faq {
-      display: grid;
-      gap: 14px;
-    }
-
-    .timeline-card,
-    .compare-card,
-    .benefit-card,
-    .faq-card {
-      padding: 20px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .03);
-    }
-
-    .timeline-card strong,
-    .compare-card strong,
-    .benefit-card strong,
-    .faq-card strong {
-      display: block;
-      color: #fff;
-      margin-bottom: 8px;
-      font-size: 16px;
-    }
-
-    .timeline-card p,
-    .compare-card p,
-    .benefit-card p,
-    .faq-card p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.9;
-      font-size: 14px;
-    }
-
-    .compare-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .compare-card.bad {
-      background: linear-gradient(180deg, rgba(251, 113, 133, .08), rgba(255, 255, 255, .02));
-      border-color: rgba(251, 113, 133, .20);
-    }
-
-    .compare-card.good {
-      background: linear-gradient(180deg, rgba(52, 211, 153, .08), rgba(255, 255, 255, .02));
-      border-color: rgba(52, 211, 153, .20);
-    }
-
-    .compare-label {
-      display: inline-flex;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .compare-card.bad .compare-label {
-      background: rgba(251, 113, 133, .12);
-      color: #ffd5df;
-    }
-
-    .compare-card.good .compare-label {
-      background: rgba(52, 211, 153, .12);
-      color: #cbffe9;
-    }
-
-    .benefit-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .footer-note {
-      margin: 34px 0 56px;
-      color: var(--sub);
-      text-align: center;
-      font-size: 12px;
-      line-height: 1.8;
-    }
-
-    .badge.free {
-      background: rgba(52, 211, 153, .12);
-      color: #cbffe9;
-      border-color: rgba(52, 211, 153, .24);
-    }
-
-    @media (max-width: 1024px) {
-      .shell {
-        grid-template-columns: 1fr
-      }
-
-      .right-col {
-        position: static
-      }
-
-      .phone {
-        grid-template-columns: 1fr
-      }
-    }
-
-    @media (max-width: 720px) {
-      .hero {
-        padding: 24px
-      }
-
-      .plan {
-        padding: 20px
-      }
-
-      .hero-grid,
-      .benefit-grid,
-      .compare-grid {
-        grid-template-columns: 1fr
-      }
-
-      h1 {
-        font-size: clamp(30px, 11vw, 48px)
-      }
-
-      .lead {
-        font-size: 15px
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>情報収集、LINEで終わる。| LINEニュースbot</title>
+<meta name="description" content="ニュース要約、相場確認、急落株チェック、補助金検索までLINEで完結。忙しい毎日の情報収集を効率化する総合botサービス。" />
+<style>
+  :root{
+    --bg:#09111f;
+    --bg-2:#0e172a;
+    --card:#101b31;
+    --card-2:#13203a;
+    --line:rgba(255,255,255,.10);
+    --line-2:rgba(255,255,255,.06);
+    --text:#eef4ff;
+    --muted:#aab7d1;
+    --sub:#7f8daa;
+    --accent:#58a6ff;
+    --accent-2:#7c4dff;
+    --good:#34d399;
+    --warn:#fbbf24;
+    --danger:#fb7185;
+    --shadow:0 30px 80px rgba(0,0,0,.34);
+    --radius:24px;
+    --radius-sm:18px;
+    --max:560px; /* スマホ最適化 */
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(88,166,255,.16), transparent 28%),
+      radial-gradient(circle at 100% 10%, rgba(124,77,255,.18), transparent 26%),
+      radial-gradient(circle at 50% 100%, rgba(52,211,153,.08), transparent 22%),
+      linear-gradient(180deg, var(--bg) 0%, #08101d 45%, #07101b 100%);
+    min-height:100vh;
+    font-feature-settings:"palt";
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .container{width:min(calc(100% - 32px), var(--max));margin:0 auto}
+
+  /* === Hero === */
+  .hero-wrap{padding:32px 0 24px}
+  .card{
+    background:linear-gradient(180deg, rgba(19,32,58,.92), rgba(12,23,43,.96));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(10px);
+  }
+  .hero{padding:32px 24px}
+  .badge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:7px 11px;border-radius:999px;
+    font-size:11px;font-weight:800;letter-spacing:.02em;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.04);
+    color:#dbe8ff;
+    white-space:nowrap;
+  }
+  .badge.free{background:rgba(52,211,153,.12);color:#cbffe9;border-color:rgba(52,211,153,.24)}
+  .badge.dot::before{content:"";width:6px;height:6px;border-radius:999px;background:var(--good)}
+
+  h1{
+    margin:18px 0 14px;
+    font-size:clamp(30px, 8vw, 42px);
+    line-height:1.12;
+    letter-spacing:-.04em;
+    font-weight:900;
+  }
+  .headline-accent{
+    display:block;
+    background:linear-gradient(135deg, #ffffff 10%, #9ed0ff 45%, #b99cff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lead{margin:0;font-size:15px;line-height:1.9;color:var(--muted)}
+  .lead strong{color:#fff;font-weight:700}
+
+  .hero-chips{
+    margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;
+  }
+  .chip{
+    padding:6px 10px;border-radius:10px;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    font-size:12px;color:#dbe8ff;font-weight:700;
+    white-space:nowrap;
+  }
+
+  /* === CTA === */
+  .cta{
+    width:100%;min-height:58px;
+    display:inline-flex;justify-content:center;align-items:center;gap:8px;
+    border-radius:18px;
+    background:linear-gradient(135deg, #5db0ff 0%, #7c4dff 60%, #8e44ff 100%);
+    color:#fff;font-size:16px;font-weight:900;letter-spacing:.01em;
+    box-shadow:0 16px 40px rgba(88,166,255,.28);
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .cta:hover{transform:translateY(-1px);box-shadow:0 20px 44px rgba(88,166,255,.36)}
+  .cta:active{transform:translateY(0)}
+  .cta .sub{display:block;font-size:11px;opacity:.85;margin-top:2px;font-weight:700}
+  .cta-wrap{margin-top:22px}
+  .cta-note{margin-top:10px;color:var(--sub);font-size:12px;text-align:center;line-height:1.7}
+
+  /* Secondary (free) CTA — used when paid CTA is also shown */
+  .cta.secondary{
+    background:rgba(255,255,255,.05);
+    color:#eef4ff;
+    border:1px solid var(--line);
+    box-shadow:none;
+  }
+  .cta.secondary:hover{
+    background:rgba(255,255,255,.08);
+    box-shadow:none;
+    transform:translateY(-1px);
+  }
+
+  /* CTA pair: stack on mobile, default stacked column layout works */
+  .cta-pair{display:grid;gap:10px}
+  .cta-pair .cta{width:100%}
+
+  /* === Phone mock === */
+  .phone-wrap{margin-top:26px;display:grid;place-items:center}
+  .phone-frame{
+    width:min(280px, 78%);
+    border-radius:36px;
+    background:#050b15;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 20px 60px rgba(0,0,0,.40);
+    padding:12px;
+  }
+  .phone-screen{
+    border-radius:26px;overflow:hidden;
+    background:linear-gradient(180deg,#0d1526,#091120);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .phone-top{
+    padding:10px 14px 6px;font-size:11px;color:#dbe6ff;
+    display:flex;justify-content:space-between;opacity:.92;
+  }
+  .chat-head{
+    padding:10px 14px;
+    border-top:1px solid rgba(255,255,255,.04);
+    border-bottom:1px solid rgba(255,255,255,.04);
+    background:rgba(255,255,255,.02);
+    display:flex;align-items:center;gap:10px;
+    font-size:12px;font-weight:700;
+  }
+  .avatar{
+    width:28px;height:28px;border-radius:999px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,#58a6ff,#7c4dff);
+    color:#fff;font-size:12px;font-weight:900;
+  }
+  .chat-body{padding:14px;display:grid;gap:10px;background:rgba(255,255,255,.01)}
+  .bubble{
+    max-width:88%;padding:10px 12px;border-radius:16px;
+    line-height:1.7;font-size:12px;white-space:pre-line;
+  }
+  .bubble.left{
+    background:#16233d;border:1px solid rgba(255,255,255,.06);
+    color:#eef4ff;border-top-left-radius:6px;
+  }
+  .bubble.right{
+    margin-left:auto;
+    background:linear-gradient(135deg,#58a6ff,#7c4dff);
+    color:#fff;border-top-right-radius:6px;
+  }
+  .richmenu{
+    padding:8px;background:#0b1222;
+    border-top:1px solid rgba(255,255,255,.05);
+    display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+  }
+  .rm{
+    padding:12px 4px;border-radius:8px;
+    background:#0f2540;text-align:center;font-size:10px;
+    color:#eef2f7;font-weight:700;
+  }
+  .rm:nth-child(even){background:#153154}
+  .rm .ic{display:block;font-size:14px;margin-bottom:3px;opacity:.9}
+
+  /* === LINE-like realistic talk mock === */
+  .talk-showcase{margin-top:40px}
+  .talk-scroll{
+    margin:20px -16px 0;
+    padding:6px 16px 20px;
+    display:grid;grid-auto-flow:column;grid-auto-columns:82%;gap:14px;
+    overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .talk-scroll::-webkit-scrollbar{display:none}
+  @media(min-width:560px){ .talk-scroll{grid-auto-columns:60%} }
+
+  .talk-card{
+    scroll-snap-align:center;
+    border-radius:22px;
+    background:#050b15;
+    border:1px solid rgba(255,255,255,.08);
+    padding:10px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .talk-screen{
+    position:relative;
+    border-radius:16px;overflow:hidden;
+    background:#a3c4e8; /* LINE水色背景 */
+    aspect-ratio: 9 / 15;
+    display:flex;flex-direction:column;
+  }
+  /* ステータスバー */
+  .tstat{
+    padding:8px 14px 4px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;color:#111;font-weight:600;
+  }
+  .tstat .right{display:flex;gap:4px;align-items:center;opacity:.85}
+  /* ヘッダー */
+  .thead{
+    padding:6px 10px 8px;
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;color:#222;font-weight:600;
+    background:#a3c4e8;
+    border-bottom:1px solid rgba(0,0,0,.06);
+  }
+  .thead .back{color:#111;opacity:.8}
+  .thead .title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .thead .icons{display:flex;gap:8px;opacity:.7}
+  /* 本文 */
+  .tbody{
+    flex:1;padding:10px 10px 6px;
+    display:flex;flex-direction:column;gap:8px;
+    overflow:hidden;
+  }
+  .tb-row{display:flex;align-items:flex-end;gap:6px}
+  .tb-row.me{justify-content:flex-end}
+  .tavatar{
+    width:22px;height:22px;border-radius:8px;flex:none;
+    background:#2f4e7c;
+    display:grid;place-items:center;
+    color:#fff;font-size:10px;font-weight:800;
+    box-shadow:0 1px 2px rgba(0,0,0,.15);
+  }
+  .tavatar svg{width:12px;height:12px}
+  .tbubble{
+    max-width:80%;
+    padding:7px 9px;border-radius:12px;
+    font-size:10.5px;line-height:1.55;
+    white-space:pre-line;
+    color:#1a1a1a;
+    box-shadow:0 1px 1px rgba(0,0,0,.04);
+    word-break:break-word;
+  }
+  .tbubble.them{background:#fff;border-top-left-radius:3px}
+  .tbubble.me{background:#87d65a;color:#1a1a1a;border-top-right-radius:3px}
+  .tbubble b{font-weight:700}
+  .tbubble .hl{color:#c2410c;font-weight:700}
+  .tbubble .src{color:#2563eb;text-decoration:underline;font-size:10px;word-break:break-all}
+  .tbubble ol{margin:2px 0 0;padding-left:0;list-style:none;display:grid;gap:4px}
+  .tbubble ol li{display:block}
+  .ttime{font-size:8.5px;color:#555;align-self:flex-end;padding:0 2px 2px}
+  .tread{font-size:8px;color:#666}
+  /* クイックリプライ（丸いボタン） */
+  .tquick{
+    display:flex;gap:5px;padding:4px 10px 6px;flex-wrap:nowrap;overflow:hidden;
+  }
+  .tquick .q{
+    padding:4px 9px;border-radius:999px;
+    background:rgba(255,255,255,.6);
+    border:1px solid #2f6cb0;
+    color:#2f6cb0;font-size:9.5px;font-weight:600;
+    white-space:nowrap;
+  }
+  /* 入力バー */
+  .tinput{
+    padding:6px 8px;
+    background:#eef1f4;
+    border-top:1px solid rgba(0,0,0,.06);
+    display:flex;align-items:center;gap:6px;
+  }
+  .tinput .box{
+    flex:1;height:22px;border-radius:999px;
+    background:#fff;font-size:10px;color:#888;
+    display:flex;align-items:center;padding:0 10px;
+  }
+  .tinput .ic{width:16px;height:16px;opacity:.55}
+  /* リッチメニュー */
+  .trichmenu{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:rgba(255,255,255,.12);
+  }
+  .trichmenu .rm{
+    background:#0f2540;color:#fff;
+    padding:8px 2px 7px;text-align:center;
+    font-size:9px;font-weight:700;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+  }
+  .trichmenu .rm:nth-child(even){background:#15345b}
+  .trichmenu .rm svg{width:14px;height:14px;stroke:#fff;opacity:.95}
+  .trichmenu .rm .accent{
+    width:14px;height:2px;background:#e8b84a;border-radius:2px;margin-top:1px;
+  }
+
+  /* フレックス(Flexメッセージ)風カード */
+  .tflex{
+    background:#fff;border-radius:10px;padding:10px;
+    max-width:86%;
+    box-shadow:0 1px 1px rgba(0,0,0,.05);
+    font-size:10px;color:#1a1a1a;line-height:1.5;
+  }
+  .tflex .title{font-size:11px;font-weight:700;margin-bottom:6px;color:#111}
+  .tflex .grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 0}
+  .tflex .g-btn{
+    padding:6px 4px;border-radius:6px;text-align:center;
+    font-size:10px;font-weight:700;
+  }
+  .tflex .g-btn.on{background:#22c55e;color:#fff}
+  .tflex .g-btn.off{background:#d6d9de;color:#555}
+  .tflex .g-btn .sub{display:block;font-size:8px;font-weight:500;color:inherit;opacity:.8;margin-top:1px}
+  .tflex .decide{
+    margin-top:4px;padding:8px;border-radius:7px;
+    background:#22c55e;color:#fff;text-align:center;
+    font-size:11px;font-weight:800;
+  }
+  /* スクロールヒント */
+  .scroll-hint{
+    display:flex;justify-content:center;gap:4px;margin-top:4px;
+    font-size:11px;color:var(--sub);
+  }
+  .scroll-hint .dot{width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,.18)}
+
+  /* === Sections === */
+  section.block{margin-top:40px}
+  .kicker{
+    font-size:11px;font-weight:900;letter-spacing:.18em;
+    color:#8eb4ff;text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  h2{
+    margin:0 0 16px;font-size:26px;line-height:1.3;
+    letter-spacing:-.02em;font-weight:900;
+  }
+  h2 .em{color:#9ed0ff}
+  .section-lead{color:var(--muted);font-size:14px;line-height:1.9;margin:0 0 20px}
+
+  /* === Feature cards === */
+  .feat-list{display:grid;gap:12px}
+  .feat{
+    padding:18px;border-radius:18px;
+    border:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+    display:grid;grid-template-columns:48px 1fr;gap:14px;align-items:start;
+  }
+  .feat-ic{
+    width:48px;height:48px;border-radius:12px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg, rgba(88,166,255,.18), rgba(124,77,255,.18));
+    border:1px solid rgba(88,166,255,.24);
+    color:#cfe3ff;
+  }
+  .feat-ic svg{width:24px;height:24px}
+  .feat-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 6px}
+  .feat-title strong{font-size:15px;color:#fff;font-weight:800}
+  .feat-title .tag{
+    font-size:10px;padding:3px 7px;border-radius:6px;
+    background:rgba(251,191,36,.14);color:#ffe9b0;
+    border:1px solid rgba(251,191,36,.22);font-weight:800;
+  }
+  .feat-title .tag.free{background:rgba(52,211,153,.14);color:#cbffe9;border-color:rgba(52,211,153,.22)}
+  .feat p{margin:0;color:var(--muted);font-size:13px;line-height:1.85}
+
+  /* === Target === */
+  .target-list{display:grid;gap:10px}
+  .target{
+    padding:14px 16px;border-radius:14px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+    display:grid;grid-template-columns:22px 1fr;gap:12px;align-items:center;
+    font-size:14px;color:#e6efff;
+  }
+  .target .check{
+    width:22px;height:22px;border-radius:999px;
+    background:rgba(52,211,153,.16);
+    border:1px solid rgba(52,211,153,.30);
+    display:grid;place-items:center;color:#5aedb3;
+  }
+  .target .check svg{width:12px;height:12px}
+
+  /* === Steps === */
+  .steps{display:grid;gap:14px}
+  .step{
+    padding:20px;border-radius:18px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+    position:relative;
+  }
+  .step-num{
+    position:absolute;top:-10px;left:18px;
+    padding:4px 10px;border-radius:999px;
+    background:linear-gradient(135deg,#58a6ff,#7c4dff);
+    color:#fff;font-size:11px;font-weight:900;letter-spacing:.1em;
+  }
+  .step strong{display:block;font-size:15px;color:#fff;margin:4px 0 6px}
+  .step p{margin:0;color:var(--muted);font-size:13px;line-height:1.85}
+  .step-visual{
+    margin-top:12px;padding:12px;border-radius:12px;
+    background:rgba(0,0,0,.25);border:1px solid var(--line-2);
+    font-size:12px;color:#cfe3ff;display:flex;gap:8px;align-items:center;
+  }
+  .step-visual .ic{
+    width:28px;height:28px;border-radius:8px;
+    background:rgba(88,166,255,.16);
+    display:grid;place-items:center;color:#9ed0ff;flex:none;
+  }
+  .step-visual .ic svg{width:16px;height:16px}
+
+  /* === Benefit === */
+  .benefit-list{display:grid;gap:10px}
+  .benefit{
+    padding:14px 16px;border-radius:14px;
+    border:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(88,166,255,.06), rgba(124,77,255,.04));
+    display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start;
+  }
+  .benefit .num{
+    width:28px;height:28px;border-radius:8px;
+    background:rgba(88,166,255,.18);
+    color:#9ed0ff;font-weight:900;font-size:13px;
+    display:grid;place-items:center;
+    border:1px solid rgba(88,166,255,.30);
+  }
+  .benefit strong{display:block;color:#fff;font-size:14px;margin-bottom:4px}
+  .benefit p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+
+  /* === Compare === */
+  .plan-card{
+    padding:22px 20px;border-radius:20px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+  }
+  .plan-card + .plan-card{margin-top:14px}
+  .plan-card.paid{
+    background:linear-gradient(180deg, rgba(88,166,255,.10), rgba(124,77,255,.08));
+    border-color:rgba(88,166,255,.24);
+    position:relative;overflow:hidden;
+  }
+  .plan-card.paid::before{
+    content:"おすすめ";position:absolute;top:14px;right:14px;
+    padding:4px 10px;border-radius:999px;
+    background:linear-gradient(135deg,#58a6ff,#7c4dff);
+    color:#fff;font-size:10px;font-weight:900;letter-spacing:.1em;
+  }
+  .plan-name{font-size:13px;color:#9ed0ff;font-weight:800;letter-spacing:.06em}
+  .plan-price{
+    display:flex;align-items:baseline;gap:8px;margin:6px 0 4px;
+  }
+  .plan-price .num{font-size:38px;font-weight:900;letter-spacing:-.03em;color:#fff}
+  .plan-price .unit{font-size:13px;color:var(--muted)}
+  .plan-sub{font-size:12px;color:var(--sub);margin-bottom:14px}
+  .plan-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+  .plan-list li{
+    padding-left:22px;position:relative;
+    font-size:13px;color:#e6efff;line-height:1.75;
+  }
+  .plan-list li::before{
+    content:"";position:absolute;left:0;top:7px;
+    width:14px;height:14px;border-radius:999px;
+    background:rgba(52,211,153,.20);
+    border:1px solid rgba(52,211,153,.40);
+  }
+  .plan-list li::after{
+    content:"";position:absolute;left:4px;top:10px;
+    width:6px;height:3px;border-left:2px solid #5aedb3;border-bottom:2px solid #5aedb3;
+    transform:rotate(-45deg);
+  }
+  .plan-list li.muted{color:var(--sub)}
+  .plan-list li.muted::before{background:rgba(255,255,255,.04);border-color:var(--line)}
+  .plan-list li.muted::after{display:none}
+
+  /* === FAQ === */
+  .faq-list{display:grid;gap:10px}
+  details.faq-item{
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:rgba(255,255,255,.03);
+    overflow:hidden;
+  }
+  details.faq-item[open]{background:rgba(255,255,255,.05)}
+  details.faq-item summary{
+    list-style:none;cursor:pointer;
+    padding:16px 48px 16px 18px;
+    font-size:14px;font-weight:700;color:#fff;
+    position:relative;line-height:1.6;
+  }
+  details.faq-item summary::-webkit-details-marker{display:none}
+  details.faq-item summary::after{
+    content:"";position:absolute;right:20px;top:50%;
+    width:10px;height:10px;
+    border-right:2px solid #9ed0ff;border-bottom:2px solid #9ed0ff;
+    transform:translateY(-70%) rotate(45deg);
+    transition:transform .2s ease;
+  }
+  details.faq-item[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+  details.faq-item .faq-body{
+    padding:0 18px 18px;color:var(--muted);font-size:13px;line-height:1.9;
+  }
+
+  /* === Final CTA === */
+  .final{
+    margin-top:40px;padding:36px 24px;
+    border-radius:24px;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(88,166,255,.22), transparent 40%),
+      radial-gradient(circle at 100% 100%, rgba(124,77,255,.20), transparent 40%),
+      linear-gradient(180deg, rgba(19,32,58,.96), rgba(12,23,43,.98));
+    border:1px solid rgba(88,166,255,.20);
+    text-align:center;
+  }
+  .final h2{font-size:24px;margin-bottom:12px}
+  .final p{color:var(--muted);font-size:14px;line-height:1.9;margin:0 0 20px}
+
+  /* === Footer === */
+  footer{
+    margin:32px 0 48px;padding:20px;
+    text-align:center;color:var(--sub);font-size:12px;line-height:2;
+  }
+  footer a{color:#9ed0ff}
+  footer a:hover{color:#fff}
+  footer .divider{margin:0 8px;opacity:.4}
+
+  /* === Sticky bottom CTA === */
+  .sticky-cta{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(9,17,31,0), rgba(9,17,31,.92) 30%, rgba(9,17,31,.98));
+    backdrop-filter:blur(8px);
+    transform:translateY(120%);transition:transform .25s ease;
+    pointer-events:none;
+  }
+  .sticky-cta.on{transform:translateY(0);pointer-events:auto}
+  .sticky-cta .cta{min-height:50px;font-size:15px;border-radius:14px;box-shadow:0 10px 28px rgba(88,166,255,.40)}
+
+  /* === Reassure block (hero内の大きなバッジ) === */
+  .reassure{
+    margin-top:22px;padding:16px 16px 14px;
+    border-radius:16px;
+    background:linear-gradient(135deg, rgba(52,211,153,.12), rgba(88,166,255,.08));
+    border:1px solid rgba(52,211,153,.24);
+    display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;
+  }
+  .reassure .rz-ic{
+    width:40px;height:40px;border-radius:12px;
+    background:rgba(52,211,153,.22);
+    display:grid;place-items:center;color:#5aedb3;
+    border:1px solid rgba(52,211,153,.30);
+    flex:none;
+  }
+  .reassure .rz-ic svg{width:22px;height:22px}
+  .reassure .rz-title{font-size:14px;font-weight:800;color:#fff;margin:0 0 2px;line-height:1.4}
+  .reassure .rz-sub{font-size:12px;color:#cbffe9;margin:0;line-height:1.6}
+  .reassure .rz-sub b{color:#fff}
+
+  /* === Instant (すぐ使える3機能) === */
+  .instant{
+    margin-top:40px;padding:24px 20px;
+    border-radius:var(--radius);
+    background:linear-gradient(180deg, rgba(52,211,153,.10), rgba(88,166,255,.06));
+    border:1px solid rgba(52,211,153,.22);
+  }
+  .instant .it-kicker{
+    font-size:11px;font-weight:900;letter-spacing:.18em;
+    color:#5aedb3;text-transform:uppercase;margin-bottom:8px;
+  }
+  .instant h3{
+    margin:0 0 6px;font-size:22px;line-height:1.3;
+    letter-spacing:-.02em;font-weight:900;color:#fff;
+  }
+  .instant .it-lead{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.8}
+  .instant .it-lead b{color:#cbffe9}
+  .it-list{display:grid;gap:10px}
+  .it-item{
+    padding:14px 14px;border-radius:14px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;
+  }
+  .it-ic{
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(52,211,153,.16);color:#5aedb3;
+    border:1px solid rgba(52,211,153,.28);
+    display:grid;place-items:center;
+  }
+  .it-ic svg{width:18px;height:18px}
+  .it-text strong{display:block;font-size:14px;color:#fff;font-weight:800;margin-bottom:2px}
+  .it-text span{font-size:12px;color:var(--muted)}
+  .it-free{
+    font-size:10px;font-weight:800;padding:4px 8px;border-radius:6px;
+    background:rgba(52,211,153,.16);color:#cbffe9;
+    border:1px solid rgba(52,211,153,.28);white-space:nowrap;
+  }
+  .it-count{
+    margin-top:14px;text-align:center;font-size:12px;color:var(--muted);
+  }
+  .it-count b{color:#fff}
+
+  @media (min-width:720px){
+    .feat{grid-template-columns:56px 1fr}
+    .feat-ic{width:56px;height:56px}
+    .feat-ic svg{width:28px;height:28px}
+    h1{font-size:44px}
+    .hero{padding:44px 36px}
+  }
+</style>
 </head>
-
 <body>
-  <div class="hero-wrap">
-    <div class="container">
-      <div class="shell">
-        <section class="card hero">
-          <div class="badge-row">
-            <div class="badge free">無料でも使える</div>
-            <div class="badge hot">朝5時に届く10秒の予習</div>
-            <div class="badge">LINE完結</div>
-            <div class="badge">商談・雑談・飲み会で使える</div>
-          </div>
 
-          <h1>
-            あの気まずい沈黙、
-            <span class="headline-accent">もう終わりにしませんか？</span>
-          </h1>
+<div class="hero-wrap">
+  <div class="container">
 
-          <p class="lead">
-            商談の導入、飲み会の隙間、エレベーターの中。<br>
-            何か話さなきゃと思うほど、言葉が出てこない。<br>
-            このLINEは、ニュースを「読むもの」じゃなく
-            <strong style="color:#fff">そのまま使える会話ネタ</strong>に変える。
-          </p>
-
-          <div class="fear-box">
-            「最近、何か面白いニュースあった？」<br>
-            その一言で詰まる。適当に合わせて浅く終わる。会話が止まる。<br>
-            問題はニュースを知らないことじゃない。<strong>その場を乗り切れないこと</strong>だ。
-          </div>
-
-          <div class="hero-grid">
-            <div class="mini-card">
-              <div class="mini-label">朝10秒の防衛準備</div>
-              <p>朝5時に届く。起きてすぐ眺めるだけ。今日の話題探しがその場で終わる。</p>
-            </div>
-            <div class="mini-card">
-              <div class="mini-label">困った時のお守り</div>
-              <p>知らない話題が来てもLINEで「〇〇って何？」と送るだけ。AIが耳打ちする。</p>
-            </div>
-            <div class="mini-card">
-              <div class="mini-label">ニュース解説まで用意</div>
-              <p>「詳しく」で深掘り。相手が食いついた後の返しまで続けられる。</p>
-            </div>
-          </div>
-
-          <div class="phone">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <div class="phone-top">
-                  <span>5:00</span>
-                  <span>LINE</span>
-                  <span>100%</span>
-                </div>
-                <div class="chat-head">
-                  <div class="avatar">N</div>
-                  <div>話題に困らん10秒ニュース</div>
-                </div>
-                <div class="chat-body">
-                  <div class="bubble left">今日のニュース、ここだけ。
-
-                    ①［金利］
-                    住宅ローンへの影響が話題
-                    👉 家計に効きそう
-
-                    ②［AI］
-                    生成AIの新機能
-                    👉 仕事で使う人さらに増えそう</div>
-                  <div class="bubble right">１詳しく</div>
-                  <div class="bubble left">最近の金利は、住宅ローンや家計への影響で会話にしやすい。
-                    「変動金利の人、気になりますよね」で入りやすい。</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="phone-copy">
-              <div class="quote">
-                <strong>朝5時に届くから、起きてすぐ今日の話題探しが終わる。</strong><br>
-                ニュースアプリを開いて探し回る必要はない。今日使えそうな話題だけ、最初から絞って届く。
-              </div>
-              <div class="quote">
-                <strong>これは勉強じゃない。カンニングペーパーだ。</strong><br>
-                商談前、移動中、飲み会前。必要な時だけ眺めればいい。知識量より、沈黙を回避できることが価値。
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-title">BEFORE / AFTER</div>
-            <div class="compare-grid">
-              <div class="compare-card bad">
-                <div class="compare-label">Before</div>
-                <strong>取引先「最近の金利、どうなりそうですかね？」</strong>
-                <p>
-                  あなた「えーっと、上がりそうですよね……」<br><br>
-                  そこで止まる。浅く終わる。空気が途切れる。<br>
-                  <span style="color:#ffd5df">→ 「あんまり見てない人かな」と思われやすい。</span>
-                </p>
-              </div>
-              <div class="compare-card good">
-                <div class="compare-label">After</div>
-                <strong>取引先「最近の金利、どうなりそうですかね？」</strong>
-                <p>
-                  あなた「住宅ローンへの影響、気になりますよね。昨日の話だと……」<br><br>
-                  今朝の10秒予習をそのまま使うだけ。<br>
-                  <span style="color:#cbffe9">→ 「アンテナ高いですね」に変わる。</span>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-title">このbotでできること</div>
-            <div class="benefit-grid">
-              <div class="benefit-card">
-                <strong>ニュースを会話向けに変換</strong>
-                <p>見出しだけじゃなく、切り出し方、重要ポイント、会話に使う角度まで出る。</p>
-              </div>
-              <div class="benefit-card">
-                <strong>「詳しく」で知ったかぶりを深さに変える</strong>
-                <p>浅い知識で止まるのが一番危ない。相手が食いついた時の二の矢まで準備できる。</p>
-              </div>
-              <div class="benefit-card">
-                <strong>相手に合わせた話題が出せる</strong>
-                <p>彼女、上司、お客さんなど、誰と話すかに合わせて角度を変えられる。</p>
-              </div>
-              <div class="benefit-card">
-                <strong>LINEの中だけで完結</strong>
-                <p>アプリを切り替えない。調べ直さない。その場で投げて、その場で答えが返る。</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-title">向いている人</div>
-            <div class="timeline">
-              <div class="timeline-card">
-                <strong>営業・接客・商談がある人</strong>
-                <p>雑談の入りで詰まりたくない。相手との空気を切りたくない。そういう人に一番刺さる。</p>
-              </div>
-              <div class="timeline-card">
-                <strong>ニュースを追うのが面倒な人</strong>
-                <p>深く勉強したいわけじゃない。でも無知っぽく見られるのは避けたい。その中間にちょうどいい。</p>
-              </div>
-              <div class="timeline-card">
-                <strong>話題に困りたくない人</strong>
-                <p>飲み会、初対面、ちょっとした移動。沈黙を埋める手札が欲しい人向け。</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <aside class="right-col">
-          <div class="card plan">
-            <div class="price-kicker">
-              <div>
-                <h2>無料でも使える / メンバーシップでフル解放</h2>
-                <p>まずは無料で試せる。必要になったら、メンバーシップで深掘りや追加機能まで使える。</p>
-              </div>
-              <div class="plan-tag">無料あり</div>
-            </div>
-
-            <div class="price-box" style="margin-bottom:14px;">
-              <div class="price-main">
-                <div class="num">無料</div>
-                <div class="unit">/ 0円</div>
-              </div>
-              <div class="price-note">
-                朝の話題配信や基本のニュース要約など、無料のままでも使える。
-              </div>
-            </div>
-            <div class="micro-copy">
-              これで、今日の商談の沈黙はなくなる。
-            </div>
-            <!-- 無料プラン -->
-            <div class="summary" style="margin-bottom:14px;">
-              <div class="row"><span>朝5時の話題配信</span><strong>使える</strong></div>
-              <div class="row"><span>ニュース要約（基本）</span><strong>使える</strong></div>
-              <div class="row"><span>「詳しく」でニュース解説</span><strong>一部可</strong></div>
-              <div class="row"><span>追加ニュース</span><strong>制限あり</strong></div>
-              <div class="row"><span>相手別の話題出し</span><strong>制限あり</strong></div>
-              <div class="row total"><span>料金</span><strong>無料</strong></div>
-            </div>
-
-            <div class="small" style="margin-bottom:16px;">
-              無料のままでも使える。まず試してからでOK。
-            </div>
-
-            <div class="price-box">
-              <div class="price-main">
-                <div class="num">298円</div>
-                <div class="unit">/ 月額・税込</div>
-              </div>
-              <div class="price-note">
-                朝夜の配信、追加ニュース、深掘り、会話ネタ、相手別の話題づくりまでまとめて使える。
-              </div>
-            </div>
-
-            <!-- 有料プラン -->
-            <div class="summary">
-              <div class="row"><span>朝5時の話題配信 + 夜配信</span><strong>使える</strong></div>
-              <div class="row"><span>長いニュースを一口サイズに要約</span><strong>使える</strong></div>
-              <div class="row"><span>「詳しく」で深掘り</span><strong>使える</strong></div>
-              <div class="row"><span>相手別の話題出し</span><strong>使える</strong></div>
-              <div class="row"><span>更新</span><strong>毎月自動</strong></div>
-              <div class="row total"><span>お支払い合計</span><strong>298円</strong></div>
-            </div>
-
-            <div style="display:grid; gap:12px; margin-top:18px;">
-              <a class="cta" href="#" id="paymentButton">有料でフル解放する</a>
-            </div>
-            <div class="small" id="paymentStatus" style="margin-top:12px;"></div>
-
-            <div class="small" style="margin-top:14px;">
-              無料でも使えるが、制限あり。<br>
-              必要になったら有料に切り替えればOK。
-            </div>
-
-            <div class="small" style="margin-top:14px;">
-              決済完了後、そのままLINE側の機能を開放する想定。<br>
-              実際の課金導線URLに差し替えればそのまま使える。
-            </div>
-
-            <div class="small" style="margin-top:14px;">
-              このサービスは、LINE上でニュース要約、話題提案、追加解説を提供する月額制デジタルサービスです。<br>
-              有料プランの解約はLINE上の案内またはお問い合わせ窓口から行えます。
-            </div>
-          </div>
-
-          <div class="card plan" id="faq">
-            <div class="section-title">よくある不安</div>
-            <div class="faq">
-              <div class="faq-card">
-                <strong>ニュースを勉強する時間ないんだが？</strong>
-                <p>読む前提じゃない。朝5時に届く内容を10秒眺めれば十分。必要な時だけ深掘りすればいい。</p>
-              </div>
-              <div class="faq-card">
-                <strong>浅い知識で話してボロ出ない？</strong>
-                <p>そこを埋めるのが「詳しく」。相手が食いついた時の2発目、3発目まで用意できる。</p>
-              </div>
-              <div class="faq-card">
-                <strong>結局何が一番いいの？</strong>
-                <p>ニュースを追うストレスより、気まずい沈黙の恐怖を消せること。価値はそこ。</p>
-              </div>
-            </div>
-          </div>
-
-        </aside>
+    <!-- ============ 1. HERO ============ -->
+    <section class="card hero">
+      <div class="badge-row">
+        <div class="badge free">無料で試せる</div>
+        <div class="badge dot">LINE完結</div>
+        <div class="badge">即日使える</div>
       </div>
 
-      <div class="footer-note">
-        <a href="tokushoho.html">特定商取引法に基づく表記</a> / <a href="terms.html">利用規約</a> / <a href="privacy.html">プライバシーポリシー</a><br>
-        実際のStripe決済URLは本番公開時に設定してください。
+      <h1>
+        情報収集、
+        <span class="headline-accent">LINEで終わる。</span>
+      </h1>
+
+      <p class="lead">
+        ニュース要約、相場確認、急落株チェック、補助金検索まで。<br>
+        <strong>毎日の情報収集を、LINEひとつでまとめて。</strong>
+      </p>
+
+      <div class="reassure">
+        <div class="rz-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12l4 4L19 6"/>
+          </svg>
+        </div>
+        <div>
+          <p class="rz-title">LINEで友だち追加するだけ</p>
+          <p class="rz-sub"><b>アプリ不要・会員登録不要・カード登録不要。</b>無料機能はそのまますぐ使えます。</p>
+        </div>
       </div>
+
+      <div class="hero-chips">
+        <div class="chip">📰 ニュース</div>
+        <div class="chip">📈 相場</div>
+        <div class="chip">📉 急落株</div>
+        <div class="chip">💴 補助金</div>
+        <div class="chip">💬 会話ネタ</div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="phone-top">
+              <span>5:02</span><span>LINE</span><span>100%</span>
+            </div>
+            <div class="chat-head">
+              <div class="avatar">N</div>
+              <div>ニュースbot</div>
+            </div>
+            <div class="chat-body">
+              <div class="bubble left">今日のニュース、ここだけ。
+
+①［金利］
+住宅ローンへの影響が話題に
+
+②［AI］
+生成AIの新機能が発表</div>
+              <div class="bubble right">1 詳しく</div>
+              <div class="bubble left">変動金利の引き上げが議論されていて、住宅ローン返済額への影響が注目されています。</div>
+            </div>
+            <div class="richmenu">
+              <div class="rm"><span class="ic">📰</span>ニュース</div>
+              <div class="rm"><span class="ic">🔗</span>リンク</div>
+              <div class="rm"><span class="ic">📈</span>相場</div>
+              <div class="rm"><span class="ic">📉</span>急落株</div>
+              <div class="rm"><span class="ic">💬</span>会話ネタ</div>
+              <div class="rm"><span class="ic">⚙</span>使い方</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-wrap">
+        <div class="cta-pair">
+          <a class="cta" href="#" data-cta="paid" id="heroPaidCta" style="display:none">
+            <span>有料プランに登録する
+              <span class="sub">月額298円(税込) / いつでも解約可</span>
+            </span>
+          </a>
+          <a class="cta" href="#" data-cta="free" id="heroCta">
+            <span>LINEで友だち追加(30秒・無料)
+              <span class="sub">追加してすぐ使える</span>
+            </span>
+          </a>
+        </div>
+        <div class="cta-note" id="heroCtaNote">登録は30秒。クレジットカード不要。</div>
+      </div>
+    </section>
+
+    <!-- ============ 1.5 TALK SHOWCASE ============ -->
+    <section class="block talk-showcase">
+      <div class="kicker">Real UI</div>
+      <h2>こんな感じで<br><span class="em">LINEに届く</span></h2>
+      <p class="section-lead">
+        実際のトーク画面を再現。ボタンを押すだけ、質問を送るだけ。横スワイプで各機能の画面が見られます。
+      </p>
+
+      <div class="talk-scroll" id="talkScroll">
+
+        <!-- === Scene 1: 朝のニュース配信 === -->
+        <div class="talk-card">
+          <div class="talk-screen">
+            <div class="tstat"><span>21:48</span><span class="right">●●● ◂ 42</span></div>
+            <div class="thead">
+              <span class="back">‹</span>
+              <span class="title">【AI要約配信】今日のニュースと相場速報</span>
+              <span class="icons">⌕ ⬚ ☰</span>
+            </div>
+            <div class="tbody">
+              <div class="tb-row">
+                <div class="tavatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M6.3 6.3l2 2M3 12h3M17.7 6.3l-2 2M12 8a4 4 0 0 0-4 4v4h8v-4a4 4 0 0 0-4-4zM9 20h6"/></svg>
+                </div>
+                <div class="tbubble them">
+<b>今日のニュース、ここだけ</b>
+
+① [日銀が金利据え置き 円安継続、輸出に追い風]
+👉 日銀が金利を据え置き、円安が継続している。
+輸出関連が追い風、輸入価格には警戒感。
+
+② [EUがAI規制第2弾 生成AIに透明性義務]
+👉 EUが生成AIに学習データ開示を義務化する方針。
+国内各社への影響も広がりそうだ。
+
+③ [東証大引け 日経平均は4日ぶり反落]
+👉 日経平均が4日ぶりに反落、一時6万円台。
+利益確定売りが影響している。
+                  <div class="ttime">21:48</div>
+                </div>
+              </div>
+            </div>
+            <div class="trichmenu">
+              <div class="rm"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="13" height="13" rx="1"/><rect x="6" y="7" width="5" height="4"/><line x1="12" y1="7" x2="16" y2="7"/><line x1="12" y1="9" x2="16" y2="9"/><line x1="6" y1="13" x2="16" y2="13"/></svg>ニュース<div class="accent"></div></div>
+              <div class="rm"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M9 13a4 4 0 0 0 5 0l3-3a4 4 0 0 0-5-5l-1 1"/><path d="M15 11a4 4 0 0 0-5 0l-3 3a4 4 0 0 0 5 5l1-1"/></svg>リンク<div class="accent"></div></div>
+              <div class="rm"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="19" x2="20" y2="19"/><line x1="7" y1="9" x2="7" y2="17"/><line x1="12" y1="5" x2="12" y2="17"/><line x1="17" y1="11" x2="17" y2="17"/><polyline points="5,13 10,9 14,11 19,7"/></svg>相場<div class="accent"></div></div>
+              <div class="rm"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="19" x2="20" y2="19"/><polyline points="5,8 10,13 14,11 19,16"/><polyline points="19,12 19,16 15,16"/></svg>急落株<div class="accent"></div></div>
+              <div class="rm"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-5l-4 3v-3H6a2 2 0 0 1-2-2z"/></svg>会話ネタ<div class="accent"></div></div>
+              <div class="rm"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>使い方<div class="accent"></div></div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:10px;font-weight:600">① 毎朝ニュースが届く</div>
+        </div>
+
+        <!-- === Scene 2: 詳しく === -->
+        <div class="talk-card">
+          <div class="talk-screen">
+            <div class="tstat"><span>21:48</span><span class="right">●●● ◂ 42</span></div>
+            <div class="thead">
+              <span class="back">‹</span>
+              <span class="title">【AI要約配信】今日のニュースと相場速報</span>
+              <span class="icons">⌕ ⬚ ☰</span>
+            </div>
+            <div class="tbody">
+              <div class="tb-row me">
+                <span class="tread">既読 21:48</span>
+                <div class="tbubble me">1 詳しく</div>
+              </div>
+              <div class="tb-row">
+                <div class="tavatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M6.3 6.3l2 2M3 12h3M17.7 6.3l-2 2M12 8a4 4 0 0 0-4 4v4h8v-4a4 4 0 0 0-4-4zM9 20h6"/></svg>
+                </div>
+                <div class="tbubble them">
+<b>1. 日銀が金利据え置き 円安継続、輸出に追い風</b>
+
+[日銀、政策金利を据え置き]
+
+日銀は金融政策決定会合で政策金利の据え置きを決めた。円安が継続しており、輸出企業には追い風となる一方、輸入コストの上昇が家計を圧迫する懸念がある。
+
+据え置きの背景には、物価上昇ペースが鈍化していることがある。市場では次回会合での利上げ観測も根強く、為替の動きに引き続き注目が集まる。
+
+今後は賃上げと消費の動向がカギとなりそうだ。
+                  <div class="ttime">21:48</div>
+                </div>
+              </div>
+            </div>
+            <div class="tquick">
+              <div class="q">ニュース</div><div class="q">リンク</div><div class="q">相場</div><div class="q">急落株</div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:10px;font-weight:600">② 番号を送るだけで深掘り</div>
+        </div>
+
+        <!-- === Scene 3: 急落株 === -->
+        <div class="talk-card">
+          <div class="talk-screen">
+            <div class="tstat"><span>21:46</span><span class="right">●●● ◂ 43</span></div>
+            <div class="thead">
+              <span class="back">‹</span>
+              <span class="title">【AI要約配信】今日のニュースと相場速報</span>
+              <span class="icons">⌕ ⬚ ☰</span>
+            </div>
+            <div class="tbody">
+              <div class="tb-row me">
+                <span class="tread">既読 21:46</span>
+                <div class="tbubble me">急落株</div>
+              </div>
+              <div class="tb-row">
+                <div class="tavatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M6.3 6.3l2 2M3 12h3M17.7 6.3l-2 2M12 8a4 4 0 0 0-4 4v4h8v-4a4 4 0 0 0-4-4zM9 20h6"/></svg>
+                </div>
+                <div class="tbubble them">
+<b>日経225 急落銘柄</b>
+日経平均 <span class="hl">-0.8%</span>
+取得: 04/23 16:50
+
+① 光学精機 HD / 1,696円
+　前日比 <span class="hl">-10.4%</span>
+　高値差 -17.3%
+　PER 16.0倍 / PBR 0.97倍 / 配当 2.1%
+　指標割安度 67/100
+
+② 東邦素材 / 553円
+　前日比 <span class="hl">-6.7%</span>
+　高値差 -24.2%
+　PER 11.5倍 / PBR 0.53倍 / 配当 1.7%
+　指標割安度 80/100
+
+③ 関東電力 HD / 585円
+　前日比 <span class="hl">-6.5%</span>
+　高値差 -37.8%
+　PER 2.8倍 / PBR 0.30倍
+　指標割安度 88/100
+
+番号で理由を見れる
+例: 1
+                  <div class="ttime">21:46</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:10px;font-weight:600">③ 急落株を指標付きで一覧</div>
+        </div>
+
+        <!-- === Scene 4: 会話ネタ === -->
+        <div class="talk-card">
+          <div class="talk-screen">
+            <div class="tstat"><span>21:47</span><span class="right">●●● ◂ 43</span></div>
+            <div class="thead">
+              <span class="back">‹</span>
+              <span class="title">【AI要約配信】今日のニュースと相場速報</span>
+              <span class="icons">⌕ ⬚ ☰</span>
+            </div>
+            <div class="tbody">
+              <div class="tb-row me">
+                <span class="tread">既読 21:47</span>
+                <div class="tbubble me">会話ネタ</div>
+              </div>
+              <div class="tb-row">
+                <div class="tavatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M6.3 6.3l2 2M3 12h3M17.7 6.3l-2 2M12 8a4 4 0 0 0-4 4v4h8v-4a4 4 0 0 0-4-4zM9 20h6"/></svg>
+                </div>
+                <div class="tbubble them">
+<b>【国際】</b>
+「台湾の飛行許可が取り消されたって聞いた？日本も影響を心配してるみたいだけど、どう思う？」
+
+———
+
+<b>よくある返し</b>
+『確かに、緊張感が増してきてるよね。』
+→「このままだと、他の国との関係も影響受けそうだね。」
+
+———
+
+<b>使いやすいポイント</b>
+飛行の自由が脅かされるのは気になるよね。
+
+———
+
+<b>小ネタ</b>
+《台湾の航空事情、ややこしそうだね。》
+
+ちなみに今日誰かと話す予定ある？
+                  <div class="ttime">21:47</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:10px;font-weight:600">④ ニュースから会話ネタを生成</div>
+        </div>
+
+        <!-- === Scene 5: 補助金 === -->
+        <div class="talk-card">
+          <div class="talk-screen">
+            <div class="tstat"><span>21:47</span><span class="right">●●● ◂ 43</span></div>
+            <div class="thead">
+              <span class="back">‹</span>
+              <span class="title">【AI要約配信】今日のニュースと相場速報</span>
+              <span class="icons">⌕ ⬚ ☰</span>
+            </div>
+            <div class="tbody">
+              <div class="tb-row me">
+                <span class="tread">既読 21:47</span>
+                <div class="tbubble me">補助金</div>
+              </div>
+              <div class="tb-row">
+                <div class="tavatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M6.3 6.3l2 2M3 12h3M17.7 6.3l-2 2M12 8a4 4 0 0 0-4 4v4h8v-4a4 4 0 0 0-4-4zM9 20h6"/></svg>
+                </div>
+                <div class="tbubble them">
+<b>【補助金・助成金 / 神奈川県 / 建設】</b>
+
+①【関東経済産業局】中小企業等知的財産支援地域連携促進事業費補助金(令和8年度)
+対象: 茨城県 / 栃木県 / 群馬県 / 埼玉県 / 千葉県 / 東京都 / <b>神奈川県</b>
+締切: 2026-05-08
+
+② 令和8年度神奈川県小規模事業者デジタル化支援推進事業費補助金
+対象: <b>神奈川県</b>
+締切: 2026-09-30
+
+③ 令和8年_設備投資_事業完了後申請
+対象: 関東1都6県
+締切: 2026-12-15
+                  <div class="ttime">21:47</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:10px;font-weight:600">⑤ 地域・業種で補助金を検索</div>
+        </div>
+
+        <!-- === Scene 6: ジャンル設定 Flex === -->
+        <div class="talk-card">
+          <div class="talk-screen">
+            <div class="tstat"><span>21:48</span><span class="right">●●● ◂ 42</span></div>
+            <div class="thead">
+              <span class="back">‹</span>
+              <span class="title">【AI要約配信】今日のニュースと相場速報</span>
+              <span class="icons">⌕ ⬚ ☰</span>
+            </div>
+            <div class="tbody">
+              <div class="tb-row me">
+                <span class="tread">既読 21:48</span>
+                <div class="tbubble me">使い方</div>
+              </div>
+              <div class="tb-row">
+                <div class="tavatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M6.3 6.3l2 2M3 12h3M17.7 6.3l-2 2M12 8a4 4 0 0 0-4 4v4h8v-4a4 4 0 0 0-4-4zM9 20h6"/></svg>
+                </div>
+                <div class="tflex">
+                  <div class="title">受け取るニュース</div>
+                  <div style="font-size:9px;color:#666">現在: 経済, 仕事, 国際, AI・テック, 暮らし, 海外</div>
+                  <div class="grid2">
+                    <div class="g-btn on">✓経済<span class="sub">金利・為替・不動産</span></div>
+                    <div class="g-btn on">✓仕事<span class="sub">業界・法改正・労働</span></div>
+                    <div class="g-btn on">✓国際<span class="sub">海外情勢・外交</span></div>
+                    <div class="g-btn on">✓AI・テック<span class="sub">AI・IT・科学</span></div>
+                    <div class="g-btn on">✓暮らし<span class="sub">医療・教育・生活</span></div>
+                    <div class="g-btn off">話題<span class="sub">芸能・SNS・流行</span></div>
+                    <div class="g-btn off">スポーツ<span class="sub">メジャー・マイナー</span></div>
+                    <div class="g-btn on">✓海外<span class="sub">米・英・韓・亜・印</span></div>
+                  </div>
+                  <div class="decide">決定</div>
+                  <div style="text-align:center;font-size:9px;color:#666;margin-top:4px">すべて解除</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:10px;font-weight:600">⑥ 興味のあるジャンルだけに絞れる</div>
+        </div>
+
+      </div>
+
+      <div class="scroll-hint">
+        <span>← スワイプで他の画面も見る →</span>
+      </div>
+    </section>
+
+    <!-- ============ 1.7 INSTANT (すぐ使える無料機能) ============ -->
+    <section class="instant">
+      <div class="it-kicker">Instant</div>
+      <h3>追加したら、すぐ使える</h3>
+      <p class="it-lead">
+        友だち追加のあと、<b>その場で無料で試せる機能</b>があります。まずは気軽に触ってみてください。
+      </p>
+      <div class="it-list">
+        <div class="it-item">
+          <div class="it-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="15" height="16" rx="1.5"/>
+              <line x1="6" y1="8" x2="12" y2="8"/><line x1="6" y1="11" x2="15" y2="11"/>
+              <line x1="6" y1="14" x2="15" y2="14"/><line x1="6" y1="17" x2="13" y2="17"/>
+            </svg>
+          </div>
+          <div class="it-text">
+            <strong>ニュース要約</strong>
+            <span>朝のまとめニュースを受け取れる</span>
+          </div>
+          <div class="it-free">無料</div>
+        </div>
+        <div class="it-item">
+          <div class="it-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-5l-4 3v-3H6a2 2 0 0 1-2-2z"/>
+            </svg>
+          </div>
+          <div class="it-text">
+            <strong>会話ネタ</strong>
+            <span>今日の話題をそのまま使える形で</span>
+          </div>
+          <div class="it-free">無料</div>
+        </div>
+        <div class="it-item">
+          <div class="it-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 13a4 4 0 0 0 5 0l3-3a4 4 0 0 0-5-5l-1 1"/>
+              <path d="M15 11a4 4 0 0 0-5 0l-3 3a4 4 0 0 0 5 5l1-1"/>
+            </svg>
+          </div>
+          <div class="it-text">
+            <strong>リンク共有</strong>
+            <span>気になった記事をそのまま保存</span>
+          </div>
+          <div class="it-free">無料</div>
+        </div>
+        <div class="it-item">
+          <div class="it-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="7" height="6" rx="1"/>
+              <rect x="14" y="5" width="7" height="6" rx="1"/>
+              <rect x="3" y="13" width="7" height="6" rx="1"/>
+              <rect x="14" y="13" width="7" height="6" rx="1"/>
+              <path d="M7 8l1.2 1.2L10 7"/>
+              <path d="M18 8l-1 1-1-1"/>
+            </svg>
+          </div>
+          <div class="it-text">
+            <strong>ジャンル選択</strong>
+            <span>経済・AI・海外など、興味分野だけに絞れる</span>
+          </div>
+          <div class="it-free">無料</div>
+        </div>
+      </div>
+      <div class="it-count">
+        ⏱ <b>平均30秒</b>で登録完了 ・ クレジットカード登録なし
+      </div>
+    </section>
+
+    <!-- ============ 2. FEATURES ============ -->
+    <section class="block" id="features">
+      <div class="kicker">Features</div>
+      <h2>このbotで<br><span class="em">できること</span></h2>
+      <p class="section-lead">
+        ニュースを読むだけじゃない。相場・株・補助金・会話ネタまで、LINEで必要な情報を引き出せます。
+      </p>
+
+      <div class="feat-list">
+
+        <!-- 1. ニュース要約 -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="15" height="16" rx="1.5"/>
+              <line x1="6" y1="8" x2="12" y2="8"/><line x1="6" y1="11" x2="15" y2="11"/>
+              <line x1="6" y1="14" x2="15" y2="14"/><line x1="6" y1="17" x2="13" y2="17"/>
+              <path d="M18 7h1.5a1.5 1.5 0 0 1 1.5 1.5V19a1 1 0 0 1-1 1h-.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>① ニュース要約</strong><span class="tag free">無料で使える</span></div>
+            <p>長い記事を読む必要なし。重要ニュースだけ、要点を短く整理して届きます。事実要約と、会話で使える一言をセットで。</p>
+          </div>
+        </div>
+
+        <!-- 2. ジャンル別配信 -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="7" height="7" rx="1.5"/>
+              <rect x="13" y="4" width="7" height="7" rx="1.5"/>
+              <rect x="4" y="13" width="7" height="7" rx="1.5"/>
+              <rect x="13" y="13" width="7" height="7" rx="1.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>② ジャンル別ニュース配信</strong><span class="tag free">無料で使える</span></div>
+            <p>経済、仕事、AI・テック、国際、暮らし、話題、スポーツ、海外から選択。興味のあるジャンルだけ受け取れます。</p>
+          </div>
+        </div>
+
+        <!-- 3. ニュース深掘り -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="6.5"/><line x1="16" y1="16" x2="21" y2="21"/>
+              <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>③ ニュース深掘り</strong><span class="tag">有料</span></div>
+            <p>気になる記事は「詳しく」で深掘り。背景や影響、この先どうなりそうかまでまとめて解説します。</p>
+          </div>
+        </div>
+
+        <!-- 4. ニュース質問・用語解説 -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a8 8 0 0 1-11.8 7L4 20l1-4.5A8 8 0 1 1 21 12z"/>
+              <path d="M10 10.5a2 2 0 1 1 3 1.6c-.7.3-1 .9-1 1.4"/>
+              <circle cx="12" cy="16.5" r=".5" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>④ ニュース質問・用語解説</strong><span class="tag">有料</span></div>
+            <p>「〇〇ってなに？」「今後どうなる？」をそのまま聞ける。記事内の用語も、疑問も、AIがLINE上で答えます。</p>
+          </div>
+        </div>
+
+        <!-- 5. 急落株チェック -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 7 9 13 13 9 21 17"/><polyline points="21 12 21 17 16 17"/>
+              <line x1="3" y1="20" x2="21" y2="20"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>⑤ 急落株チェック</strong><span class="tag">有料</span></div>
+            <p>大きく下げた日本株を一覧で表示。前日比・高値差・PER/PBR/配当まで揃うので、見逃し防止に。</p>
+          </div>
+        </div>
+
+        <!-- 6. 急落株の個別解説 -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <line x1="7" y1="10" x2="17" y2="10"/>
+              <line x1="7" y1="13" x2="14" y2="13"/>
+              <line x1="7" y1="16" x2="12" y2="16"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>⑥ 急落株の個別解説</strong><span class="tag">有料</span></div>
+            <p>番号や4桁コードを送るだけで、会社プロフィール・急落理由・短期見通しをAIがまとめて返します。</p>
+          </div>
+        </div>
+
+        <!-- 7. 相場 -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="6" y1="4" x2="6" y2="20"/>
+              <rect x="4" y="8" width="4" height="8" rx="1" fill="currentColor" fill-opacity=".18"/>
+              <line x1="12" y1="3" x2="12" y2="20"/>
+              <rect x="10" y="6" width="4" height="10" rx="1" fill="currentColor" fill-opacity=".18"/>
+              <line x1="18" y1="5" x2="18" y2="20"/>
+              <rect x="16" y="9" width="4" height="8" rx="1" fill="currentColor" fill-opacity=".18"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>⑦ 相場確認</strong><span class="tag">有料</span></div>
+            <p>日経平均、ドル円、ダウ、ゴールド、ビットコイン、原油をまとめてチェック。1メッセージで相場を把握。</p>
+          </div>
+        </div>
+
+        <!-- 8. 補助金検索 -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="6" width="18" height="12" rx="2"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line x1="7" y1="12" x2="7" y2="12.01"/>
+              <line x1="17" y1="12" x2="17" y2="12.01"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>⑧ 補助金検索</strong><span class="tag">有料</span></div>
+            <p>使える補助金・助成金をLINEで検索。都道府県や業種で絞り込めて、5件ずつページ送りで確認できます。</p>
+          </div>
+        </div>
+
+        <!-- 9. 会話ネタ -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 5h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H10l-4 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" transform="translate(1 0)"/>
+              <circle cx="8" cy="10.5" r=".8" fill="currentColor" stroke="none"/>
+              <circle cx="11" cy="10.5" r=".8" fill="currentColor" stroke="none"/>
+              <circle cx="14" cy="10.5" r=".8" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>⑨ 会話ネタ</strong><span class="tag">有料</span></div>
+            <p>雑談、職場、飲み会で使える話題を即生成。話題の切り出し方までセットで届きます。</p>
+          </div>
+        </div>
+
+        <!-- 10. 相手別会話ネタ -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="8" r="3"/>
+              <path d="M3 20c0-3 3-5 6-5s6 2 6 5"/>
+              <circle cx="17" cy="7" r="2.3"/>
+              <path d="M14.5 13.5c1-1 2-1.5 2.5-1.5 2 0 4 1.2 4 3.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>⑩ 相手別会話ネタ</strong><span class="tag">有料</span></div>
+            <p>彼女、同僚、上司、初対面など、相手に合わせて話題の角度を変えて提案。そのまま使える形で。</p>
+          </div>
+        </div>
+
+        <!-- 11. 急落株プッシュ通知 -->
+        <div class="feat">
+          <div class="feat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9a6 6 0 0 1 12 0c0 4 2 5 2 6H4c0-1 2-2 2-6z"/>
+              <path d="M10 19a2 2 0 0 0 4 0"/>
+              <line x1="17" y1="5" x2="20" y2="2"/>
+              <line x1="20" y1="5" x2="17" y2="2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feat-title"><strong>⑪ 急落株プッシュ通知</strong><span class="tag">有料</span></div>
+            <p>優良株が大きく下げた時に、自動でLINEに通知。自分で見に行かなくても、買い場になりそうなタイミングを逃しません。</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ 3. TARGET ============ -->
+    <section class="block">
+      <div class="kicker">Who is it for</div>
+      <h2>こんな人に<br><span class="em">おすすめ</span></h2>
+
+      <div class="target-list">
+        <div class="target">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg></div>
+          <div>ニュースを見る時間がない会社員・経営者</div>
+        </div>
+        <div class="target">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg></div>
+          <div>投資情報も気になるけど、追いきれない人</div>
+        </div>
+        <div class="target">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg></div>
+          <div>仕事前に、世の中の流れを把握したい人</div>
+        </div>
+        <div class="target">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg></div>
+          <div>自営業・副業で、補助金もチェックしたい人</div>
+        </div>
+        <div class="target">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg></div>
+          <div>商談・接客・雑談で、会話のネタが欲しい人</div>
+        </div>
+        <div class="target">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg></div>
+          <div>複数アプリを行き来するのが面倒な人</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. STEPS ============ -->
+    <section class="block">
+      <div class="kicker">How to use</div>
+      <h2>使い方は<br><span class="em">3ステップ</span></h2>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">STEP 01</div>
+          <strong>LINEで友だち追加</strong>
+          <p>ボタンを押してQR不要で即追加。アプリのダウンロードも、アカウント登録も不要です。</p>
+          <div class="step-visual">
+            <div class="ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><line x1="17" y1="7" x2="17" y2="13"/><line x1="14" y1="10" x2="20" y2="10"/></svg>
+            </div>
+            <div>LINEで友だち追加する</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">STEP 02</div>
+          <strong>リッチメニューをタップ</strong>
+          <p>ニュース / リンク / 相場 / 急落株 / 会話ネタ / 使い方 の6ボタンから、欲しい情報を選ぶだけ。</p>
+          <div class="step-visual" style="background:#0b1222;padding:10px">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%">
+              <div class="rm">📰 ニュース</div>
+              <div class="rm">🔗 リンク</div>
+              <div class="rm">📈 相場</div>
+              <div class="rm">📉 急落株</div>
+              <div class="rm">💬 会話ネタ</div>
+              <div class="rm">⚙ 使い方</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">STEP 03</div>
+          <strong>LINEに届く情報を受け取る</strong>
+          <p>必要な情報だけ、その場ですぐ返ってきます。「詳しく」「〇〇って何？」と追加で聞くのもOK。</p>
+          <div class="step-visual">
+            <div class="ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5z"/></svg>
+            </div>
+            <div>ニュース・相場・解説が即返信</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. WHY ============ -->
+    <section class="block">
+      <div class="kicker">Why it works</div>
+      <h2>情報収集に<br><span class="em">時間を使わない時代</span>へ</h2>
+      <p class="section-lead">
+        新聞、アプリ、SNS、証券口座。何個もアプリを開いて、バラバラに集めていた情報を、LINE1つにまとめました。
+      </p>
+
+      <div class="benefit-list">
+        <div class="benefit">
+          <div class="num">1</div>
+          <div>
+            <strong>複数サイト・複数アプリを見る必要がない</strong>
+            <p>ニュース・相場・株・補助金。情報源をまたいで探し回る時間がなくなります。</p>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="num">2</div>
+          <div>
+            <strong>普段使っているLINEだけで完結</strong>
+            <p>新しいアプリを覚える必要なし。毎日見ているLINEで、そのまま使えます。</p>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="num">3</div>
+          <div>
+            <strong>重要情報だけ絞って届く</strong>
+            <p>全部読む必要はありません。要点だけ先に受け取って、気になるものだけ深掘りできます。</p>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="num">4</div>
+          <div>
+            <strong>知りたい時にすぐ使える</strong>
+            <p>通勤中・商談前・休憩中。欲しいタイミングで、リッチメニューから1タップで引き出せます。</p>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="num">5</div>
+          <div>
+            <strong>面倒な検索が減る</strong>
+            <p>「〇〇って何？」「最近どうなった？」と聞くだけ。検索して、記事を開いて、読む手間が不要に。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. PLAN ============ -->
+    <section class="block" id="plan">
+      <div class="kicker">Plan</div>
+      <h2>無料版と<br><span class="em">有料版</span></h2>
+      <p class="section-lead">
+        まず無料で機能を試せます。物足りなくなったら、必要な時に有料で全機能を解放できます。
+      </p>
+
+      <div class="plan-card">
+        <div class="plan-name">FREE</div>
+        <div class="plan-price">
+          <div class="num">0円</div>
+          <div class="unit">/ ずっと無料</div>
+        </div>
+        <div class="plan-sub">お試し・基本利用向け</div>
+        <ul class="plan-list">
+          <li>基本ニュース要約</li>
+          <li>ジャンル別配信設定</li>
+          <li>リンク取得</li>
+          <li>会話ネタ(お試し)</li>
+          <li>使い方ガイド</li>
+          <li class="muted">ニュース深掘り・用語解説</li>
+          <li class="muted">急落株・個別解説</li>
+          <li class="muted">相場チェック</li>
+          <li class="muted">補助金検索</li>
+          <li class="muted">相手別会話ネタ</li>
+        </ul>
+      </div>
+
+      <div class="plan-card paid">
+        <div class="plan-name">PREMIUM</div>
+        <div class="plan-price">
+          <div class="num">298円</div>
+          <div class="unit">/ 月額・税込</div>
+        </div>
+        <div class="plan-sub">フル機能・毎月自動更新・いつでも解約可</div>
+        <ul class="plan-list">
+          <li>基本ニュース要約(無制限)</li>
+          <li>ニュース深掘り「詳しく」</li>
+          <li>ニュース質問・用語解説</li>
+          <li>急落株チェック(一覧)</li>
+          <li>急落株の個別解説(AI解析)</li>
+          <li>優良株の急落プッシュ通知</li>
+          <li>相場確認(日経・為替・商品)</li>
+          <li>補助金検索(都道府県・業種)</li>
+          <li>会話ネタ・相手別会話ネタ</li>
+          <li>ジャンル別配信設定</li>
+          <li>配信停止・再開もLINEで完結</li>
+        </ul>
+      </div>
+
+      <div class="cta-wrap">
+        <div class="cta-pair">
+          <a class="cta" href="#" data-cta="paid" id="planPaidCta" style="display:none">
+            <span>有料プランに登録する
+              <span class="sub">月額298円(税込) / いつでも解約可</span>
+            </span>
+          </a>
+          <a class="cta" href="#" data-cta="free" id="planCta">
+            <span>LINEで友だち追加(30秒・無料)
+              <span class="sub">追加してすぐ使える</span>
+            </span>
+          </a>
+        </div>
+        <div class="cta-note">解約はLINE上の案内またはお問い合わせからいつでも可能です。</div>
+      </div>
+    </section>
+
+    <!-- ============ 7. FAQ ============ -->
+    <section class="block">
+      <div class="kicker">FAQ</div>
+      <h2>よくある<br><span class="em">ご質問</span></h2>
+
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Q. 登録は無料ですか？</summary>
+          <div class="faq-body">はい、友だち追加・基本機能のご利用は無料です。クレジットカードの登録も不要で、まずはそのままお試しいただけます。</div>
+        </details>
+        <details class="faq-item">
+          <summary>Q. 難しい操作は必要ですか？</summary>
+          <div class="faq-body">不要です。画面下のボタン(リッチメニュー)をタップするか、LINEに質問を送るだけ。アプリのインストールもアカウント登録もありません。</div>
+        </details>
+        <details class="faq-item">
+          <summary>Q. 追加後、すぐ使えますか？</summary>
+          <div class="faq-body">はい。友だち追加直後から、ニュース要約や会話ネタなどの無料機能がすぐ利用可能です。</div>
+        </details>
+        <details class="faq-item">
+          <summary>Q. 有料プランはいつでも解約できますか？</summary>
+          <div class="faq-body">いつでも解約できます。LINE内の案内、またはお問い合わせ窓口から手続きできます。最低利用期間や解約金はありません。</div>
+        </details>
+        <details class="faq-item">
+          <summary>Q. 投資初心者でも使えますか？</summary>
+          <div class="faq-body">使えます。急落株や相場も、会社概要・背景の解説つきで返すので、専門用語がわからなくても読めます。なお、本サービスは情報提供を目的としており、投資の勧誘・助言ではありません。</div>
+        </details>
+        <details class="faq-item">
+          <summary>Q. 通知が多くなりませんか？</summary>
+          <div class="faq-body">ジャンル設定や配信停止・再開はLINEからいつでも変更できます。必要な情報だけ受け取れる設計です。</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ 8. FINAL CTA ============ -->
+    <section class="final" id="final">
+      <h2>情報収集、<br>もっとラクにしよう。</h2>
+      <p>
+        毎日のニュース確認も、相場チェックも、補助金探しも、<br>
+        LINEひとつでまとめて使えます。
+      </p>
+      <div class="cta-pair" style="max-width:380px;margin:0 auto">
+        <a class="cta" href="#" data-cta="paid" id="finalPaidCta" style="display:none">
+          <span>有料プランに登録する
+            <span class="sub">月額298円(税込) / いつでも解約可</span>
+          </span>
+        </a>
+        <a class="cta" href="#" data-cta="free" id="finalCta">
+          <span>無料で試す
+            <span class="sub">登録30秒・クレジットカード不要</span>
+          </span>
+        </a>
+      </div>
+      <div class="cta-note">※ 有料機能は登録後、LINE上でいつでも開放できます。</div>
+    </section>
+
+    <!-- ============ 9. FOOTER ============ -->
+    <footer>
+      <a href="#features">機能</a><span class="divider">/</span>
+      <a href="#plan">料金</a><span class="divider">/</span>
+      <a href="terms.html">利用規約</a><span class="divider">/</span>
+      <a href="privacy.html">プライバシー</a><span class="divider">/</span>
+      <a href="tokushoho.html">特定商取引法に基づく表記</a>
+      <br>
+      <span style="opacity:.7">© LINEニュースbot</span>
+    </footer>
+
+  </div>
+</div>
+
+<!-- Sticky bottom CTA -->
+<div class="sticky-cta" id="stickyCta">
+  <div class="container" style="max-width:560px">
+    <div class="cta-pair">
+      <a class="cta" href="#" data-cta="paid" id="stickyPaidBtn" style="display:none">有料プランに登録する (月額298円)</a>
+      <a class="cta" href="#" data-cta="free" id="stickyCtaBtn">LINEで友だち追加(30秒・無料)</a>
     </div>
   </div>
+</div>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get("user_id");
-    const billingBase = params.get("billing_base");
-    const paymentButton = document.getElementById("paymentButton");
-    const paymentStatus = document.getElementById("paymentStatus");
+<script>
+  // --- CTA links ---
+  // 友だち追加URL
+  const LINE_ADD_URL = "https://lin.ee/zwFVeLc";
+  // billing_base が欠けた時の保険。本番の app.py が動いているURLを固定で持つ
+  const DEFAULT_BILLING_BASE = "https://line-news-bot-e2mp.onrender.com";
 
-    let paymentUrl = "#";
+  // クエリで状態を判定:
+  //   plan=paid かつ user_id+billing_base → 登録済み(課金対象)
+  //   plan=free                          → 無料会員(課金ボタン表示・友だち追加は非表示)
+  //   (なし)                              → 登録前(友だち追加のみ)
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get("user_id");
+  const billingBase = params.get("billing_base");
+  const plan = params.get("plan");
+  const resolvedBillingBase = (billingBase || DEFAULT_BILLING_BASE || "").replace(/\/$/, "");
+  let paymentUrl = null;
+  if (userId && resolvedBillingBase) {
+    paymentUrl = `${resolvedBillingBase}/billing?${new URLSearchParams({ user_id: userId }).toString()}`;
+  }
+  const isFreeMember = plan === "free";
+  const showPaid = !!paymentUrl;
 
-    if (userId && billingBase) {
-      paymentUrl = `${billingBase.replace(/\/$/, "")}/billing?${new URLSearchParams({ user_id: userId }).toString()}`;
-      paymentButton.href = paymentUrl;
-      paymentStatus.textContent = "LINEからのアクセスを確認した。ボタンを押すと決済画面に進める。";
-    } else {
-      paymentButton.setAttribute("aria-disabled", "true");
-      paymentButton.style.opacity = "0.45";
-      paymentButton.style.cursor = "not-allowed";
-      paymentStatus.textContent = "このページ単体では課金できない。LINEの案内から開いてくれ。";
-    }
-
-    paymentButton.addEventListener("click", function (e) {
-      if (!paymentUrl || paymentUrl === "#") {
+  // 無料(友だち追加)ボタンは常に表示。課金ボタンは paymentUrl がある時だけ表示
+  document.querySelectorAll('[data-cta="free"]').forEach(a=>{
+    a.href = LINE_ADD_URL;
+    a.addEventListener("click", e=>{
+      if (a.getAttribute("href") === "#") {
         e.preventDefault();
-        alert("LINEの案内からアクセスすると申込できる。");
+        alert("LINE友だち追加URLを設定してください。");
       }
     });
-  </script>
-</body>
+  });
 
+  if (showPaid) {
+    document.querySelectorAll('[data-cta="paid"]').forEach(a=>{
+      a.href = paymentUrl || "#";
+      a.style.display = "";
+    });
+    if (isFreeMember) {
+      // 無料会員: すでに友だちなので友だち追加CTAは隠す
+      document.querySelectorAll('[data-cta="free"]').forEach(a=>{
+        a.style.display = "none";
+      });
+      const note = document.getElementById("heroCtaNote");
+      if (note) note.textContent = "LINE登録済み。上のボタンから有料プランへ進めます。";
+    } else {
+      // 登録済み(課金対象): 無料CTAは控えめに
+      document.querySelectorAll('[data-cta="free"]').forEach(a=>{
+        a.classList.add("secondary");
+      });
+      const note = document.getElementById("heroCtaNote");
+      if (note) note.textContent = "LINE登録済みの方は上のボタンから有料プランに進めます。";
+    }
+  }
+
+  // --- Sticky CTA show after hero scrolls out ---
+  const sticky = document.getElementById("stickyCta");
+  const final = document.getElementById("final");
+  let lastShow = false;
+  window.addEventListener("scroll", ()=>{
+    const sc = window.scrollY;
+    const finalTop = final.getBoundingClientRect().top + window.scrollY;
+    const vh = window.innerHeight;
+    // Show once user scrolled past 600px, hide when final CTA is visible
+    const show = sc > 600 && (finalTop - sc) > 200;
+    if (show !== lastShow) {
+      sticky.classList.toggle("on", show);
+      lastShow = show;
+    }
+  }, {passive:true});
+</script>
+</body>
 </html>
