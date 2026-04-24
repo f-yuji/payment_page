@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ニュース、もう読まなくていい。| LINEニュースbot</title>
+<meta name="description" content="朝5時、寝てる間にLINEにAI要約ニュースが届く。起きてすぐ1分で今日の話題がわかる。ジャンル選択・オンデマンド配信対応。無料。" />
+<template id="__bundler_thumbnail" data-bg-color="#0a0f1c">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0a0f1c"/>
+    <rect x="420" y="200" width="360" height="400" rx="40" fill="#06c755"/>
+    <text x="600" y="430" font-family="sans-serif" font-size="220" font-weight="900" fill="#fff" text-anchor="middle">N</text>
+  </svg>
+</template>
+<style>
+  :root{
+    --bg:#0a0f1c;
+    --ink:#0d1626;
+    --text:#0d1626;
+    --muted:#4d5a74;
+    --sub:#7a869d;
+    --line:rgba(13,22,38,.08);
+    --accent:#1f6feb;
+    --line-green:#06c755;
+    --warn:#ff4d4d;
+    --yellow:#ffd43b;
+    --shadow:0 16px 44px rgba(13,22,38,.10);
+    --shadow-lg:0 24px 60px rgba(13,22,38,.16);
+    --max:560px;
+    --line-bg:#8ab4e8; /* LINEトーク背景の空色 */
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;
+    background:#fff;min-height:100vh;
+    font-feature-settings:"palt";-webkit-font-smoothing:antialiased;line-height:1.6;
+  }
+  a{color:inherit;text-decoration:none}
+  .container{width:min(calc(100% - 32px), var(--max));margin:0 auto}
+  img{max-width:100%;display:block}
+
+  /* ============ LINE 風モック ============ */
+  .ph{
+    position:relative;border-radius:22px;overflow:hidden;
+    background:var(--line-bg);
+    box-shadow:0 20px 44px rgba(13,22,38,.22);
+    border:3px solid #0b1222;
+    aspect-ratio: 390 / 844;
+    display:flex;flex-direction:column;
+    font-size:12px;line-height:1.55;
+  }
+  .ph::before{
+    /* 空色背景のふんわり雲 */
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse at 80% 10%, rgba(255,255,255,.5), transparent 40%),
+      radial-gradient(ellipse at 20% 25%, rgba(255,255,255,.35), transparent 45%),
+      radial-gradient(ellipse at 60% 60%, rgba(255,255,255,.3), transparent 50%),
+      radial-gradient(ellipse at 30% 85%, rgba(255,255,255,.4), transparent 40%);
+    pointer-events:none;z-index:0;
+  }
+  .ph-status{
+    position:relative;z-index:2;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 22px 4px;
+    font-size:11px;font-weight:700;color:#0d1626;
+  }
+  .ph-status .right{display:flex;gap:4px;align-items:center;font-size:9px}
+  .ph-head{
+    position:relative;z-index:2;
+    padding:6px 14px 8px;
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:700;color:#0d1626;
+  }
+  .ph-head .back{font-size:17px;font-weight:400;line-height:1}
+  .ph-head .title{flex:1;font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ph-head .icons{font-size:11px;color:#333;letter-spacing:2px}
+  .ph-body{
+    position:relative;z-index:1;
+    flex:1;overflow:hidden;padding:6px 10px;
+  }
+  .ph-date{
+    text-align:center;font-size:9.5px;color:rgba(13,22,38,.55);
+    margin:4px auto 8px;background:rgba(255,255,255,.4);
+    display:block;width:fit-content;padding:2px 10px;border-radius:10px;
+    font-weight:700;
+  }
+  .ph-row{display:flex;gap:4px;margin-bottom:6px;align-items:flex-end}
+  .ph-row.me{justify-content:flex-end}
+  .ph-av{
+    width:28px;height:28px;border-radius:50%;
+    background:#fff;display:grid;place-items:center;
+    font-size:14px;box-shadow:0 1px 2px rgba(0,0,0,.1);flex:none;
+  }
+  .ph-bubble{
+    max-width:78%;padding:8px 11px;border-radius:14px;
+    font-size:11px;line-height:1.55;white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ph-bubble.them{background:#fff;color:#0d1626;border-bottom-left-radius:4px}
+  .ph-bubble.me{background:#06c755;color:#fff;border-bottom-right-radius:4px;font-weight:700}
+  .ph-time{
+    font-size:8px;color:rgba(13,22,38,.5);font-weight:700;
+    display:flex;flex-direction:column;justify-content:flex-end;gap:1px;
+  }
+  .ph-time.me{text-align:right;align-self:flex-end;padding-bottom:2px}
+  .ph-bubble b{font-weight:900}
+  .ph-bubble .hl{color:#1f6feb;font-weight:900}
+  .ph-bubble .big{font-size:12.5px;font-weight:900;display:block;margin-bottom:4px;color:#0d1626}
+
+  /* Rich menu */
+  .ph-rich{
+    position:relative;z-index:2;
+    background:#0d1626;color:#fff;
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .ph-rich .rm{
+    padding:12px 4px 10px;text-align:center;
+    font-size:9.5px;font-weight:700;
+    border-right:1px solid rgba(255,255,255,.08);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .ph-rich .rm:nth-child(3n){border-right:none}
+  .ph-rich .rm:nth-last-child(-n+3){border-bottom:none}
+  .ph-rich .rm svg{width:22px;height:22px;stroke:#ffd43b;stroke-width:1.8;fill:none}
+  .ph-input{
+    position:relative;z-index:2;
+    background:#fff;padding:6px 10px;display:flex;gap:6px;align-items:center;
+    font-size:14px;color:#9aa4b8;
+    border-top:1px solid rgba(0,0,0,.06);
+  }
+  .ph-input .dot{width:20px;height:20px;border-radius:50%;background:#f0f0f0;display:grid;place-items:center;font-size:12px}
+  .ph-input .in{flex:1;background:#f3f4f6;border-radius:14px;padding:4px 10px;font-size:10px}
+  .ph-quick{
+    position:relative;z-index:2;
+    background:rgba(255,255,255,.8);backdrop-filter:blur(6px);
+    padding:6px 8px;display:flex;gap:6px;overflow-x:auto;
+  }
+  .ph-quick::-webkit-scrollbar{display:none}
+  .ph-quick .q{
+    flex:none;padding:5px 12px;border-radius:20px;
+    background:#fff;border:1px solid rgba(13,22,38,.12);
+    font-size:10px;font-weight:700;color:#0d1626;
+  }
+
+  /* === HERO === */
+  .hero{
+    position:relative;padding:22px 0 40px;overflow:hidden;
+    background:
+      radial-gradient(circle at 85% -10%, rgba(255,77,77,.10), transparent 40%),
+      radial-gradient(circle at 0% 110%, rgba(31,111,235,.10), transparent 40%),
+      linear-gradient(180deg, #fff 0%, #f3f6fc 100%);
+  }
+  .brand{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;font-weight:800}
+  .brand-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#1f6feb,#4c8bff);color:#fff;display:grid;place-items:center;font-weight:900;letter-spacing:-.02em}
+
+  .shout{
+    display:inline-block;padding:6px 12px;border-radius:8px;
+    background:#ff4d4d;color:#fff;font-size:12px;font-weight:900;
+    letter-spacing:.04em;margin-bottom:14px;
+    transform:rotate(-1.5deg);
+    box-shadow:0 8px 20px rgba(255,77,77,.30);
+  }
+  .shout::before{content:"⚠ ";font-size:13px}
+
+  h1{
+    margin:0 0 16px;font-size:clamp(30px, 9vw, 44px);
+    line-height:1.14;letter-spacing:-.035em;font-weight:900;
+  }
+  h1 .strike{position:relative;display:inline-block;color:#9aa4b8}
+  h1 .strike::after{
+    content:"";position:absolute;left:-4%;right:-4%;top:55%;height:6px;
+    background:#ff4d4d;transform:rotate(-3deg);border-radius:3px;
+  }
+  h1 .hit{
+    display:inline-block;
+    background:linear-gradient(180deg, transparent 60%, #ffd43b 60%, #ffd43b 92%, transparent 92%);
+    padding:0 4px;
+  }
+  .sub-lead{margin:0 0 18px;font-size:16px;line-height:1.85;color:var(--muted);font-weight:500}
+  .sub-lead b{color:var(--text);font-weight:800}
+
+  /* hero phone */
+  .hero-phone{
+    margin:24px auto 0;width:min(78%, 320px);position:relative;
+  }
+  .hero-phone .stamp{
+    position:absolute;right:-14px;top:-10px;z-index:10;
+    width:88px;height:88px;border-radius:50%;
+    background:#ffd43b;color:#0d1626;
+    display:grid;place-items:center;text-align:center;
+    font-size:10px;font-weight:900;line-height:1.35;
+    transform:rotate(10deg);
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+    border:3px solid #0d1626;
+  }
+  .hero-phone .stamp b{display:block;font-size:19px;margin-top:1px}
+
+  /* hero: 3枚の実機スクショを重ねる */
+  .hero-ss{
+    margin:32px -16px 20px;position:relative;
+    height:460px;
+  }
+  .hero-ss .ss{
+    position:absolute;width:56%;
+    border-radius:22px;overflow:hidden;
+    box-shadow:0 20px 48px rgba(13,22,38,.35);
+    background:#0b1222;
+  }
+  .hero-ss .ss img{width:100%;display:block}
+  .hero-ss .ss-1{top:0;left:-2%;transform:rotate(-5deg);z-index:2}
+  .hero-ss .ss-2{top:10px;right:-2%;transform:rotate(6deg);z-index:1}
+  .hero-ss .ss-3{bottom:-20px;left:22%;transform:rotate(-1deg);z-index:3}
+
+  /* === HIGH-FIDELITY LINE MOCK (from lp.html) === */
+  .tphone{position:relative;border-radius:18px;overflow:hidden;background:#a3c4e8;display:flex;flex-direction:column;aspect-ratio:9/15;width:100%}
+  .tstat{padding:8px 14px 4px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#111;font-weight:600;background:#a3c4e8}
+  .tstat .right{display:flex;gap:4px;align-items:center;opacity:.85}
+  .thead{padding:6px 10px 8px;display:flex;align-items:center;gap:6px;font-size:12px;color:#222;font-weight:600;background:#a3c4e8;border-bottom:1px solid rgba(0,0,0,.06)}
+  .thead .back{color:#111;opacity:.8;font-size:14px}
+  .thead .title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .thead .icons{display:flex;gap:8px;opacity:.7}
+  .tbody{flex:1;padding:10px 10px 6px;display:flex;flex-direction:column;gap:8px;overflow:hidden;background:#a3c4e8}
+  .tb-row{display:flex;align-items:flex-end;gap:6px}
+  .tb-row.me{justify-content:flex-end}
+  .tavatar{width:22px;height:22px;border-radius:8px;flex:none;background:#2f4e7c;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .tavatar svg{width:12px;height:12px}
+  .tbubble{max-width:80%;padding:7px 9px;border-radius:12px;font-size:10.5px;line-height:1.55;white-space:pre-line;color:#1a1a1a;box-shadow:0 1px 1px rgba(0,0,0,.04);word-break:break-word}
+  .tbubble.them{background:#fff;border-top-left-radius:3px}
+  .tbubble.me{background:#87d65a;color:#1a1a1a;border-top-right-radius:3px}
+  .tbubble b{font-weight:700}
+  .tbubble .big{font-weight:700;font-size:11px;display:block;margin-bottom:3px}
+  .tbubble .hl{color:#c2410c;font-weight:700}
+  .ttime{font-size:8.5px;color:#555;align-self:flex-end;padding:0 2px 2px}
+  .tread{font-size:8px;color:#666;align-self:flex-end}
+  .tquick{display:flex;gap:5px;padding:4px 10px 6px;flex-wrap:nowrap;overflow:hidden;background:#a3c4e8}
+  .tquick .q{padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.6);border:1px solid #2f6cb0;color:#2f6cb0;font-size:9.5px;font-weight:600;white-space:nowrap}
+  .trichmenu{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.12)}
+  .trichmenu .rm{background:#0f2540;color:#fff;padding:8px 2px 7px;text-align:center;font-size:9px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .trichmenu .rm:nth-child(even){background:#15345b}
+  .trichmenu .rm svg{width:14px;height:14px;stroke:#fff;opacity:.95}
+  .trichmenu .rm .accent{width:14px;height:2px;background:#e8b84a;border-radius:2px;margin-top:1px}
+  .hero-ss .stamp{
+    position:absolute;right:6%;top:4%;z-index:10;
+    width:98px;height:98px;border-radius:50%;
+    background:#ffd43b;color:#0d1626;
+    display:grid;place-items:center;text-align:center;
+    font-size:11px;font-weight:900;line-height:1.3;
+    transform:rotate(8deg);
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+    border:3px solid #0d1626;
+  }
+  .hero-ss .stamp b{display:block;font-size:20px;margin-top:2px}
+
+  /* Solution 画像 */
+  .sol-big{
+    margin-top:28px;position:relative;
+    width:min(82%, 360px);margin-left:auto;margin-right:auto;
+    border-radius:22px;overflow:hidden;
+    border:4px solid #fff;
+    box-shadow:0 30px 70px rgba(0,0,0,.5);
+  }
+  .sol-big img{width:100%;display:block}
+  .sol-big .tphone{aspect-ratio:10/15}
+  .sol-big .label{
+    position:absolute;top:16px;left:-4px;z-index:5;
+    background:#ff4d4d;color:#fff;font-weight:900;
+    padding:8px 14px;font-size:12px;letter-spacing:.04em;
+    border-radius:0 6px 6px 0;box-shadow:0 6px 16px rgba(0,0,0,.3);
+  }
+  .sol-big .tag{
+    position:absolute;bottom:12px;right:12px;z-index:5;
+    background:#ffd43b;color:#0d1626;font-weight:900;
+    padding:6px 11px;border-radius:8px;font-size:12px;
+    box-shadow:0 6px 16px rgba(0,0,0,.3);
+  }
+
+  /* CTA */
+  .cta{
+    width:100%;min-height:62px;
+    display:inline-flex;justify-content:center;align-items:center;gap:10px;
+    border-radius:14px;background:#06c755;color:#fff;
+    font-size:17px;font-weight:900;letter-spacing:.01em;
+    box-shadow:0 14px 32px rgba(6,199,85,.36);
+    border:none;cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .cta:hover{transform:translateY(-1px);box-shadow:0 18px 38px rgba(6,199,85,.44)}
+  .cta:active{transform:translateY(0)}
+  .cta .line-ic{
+    width:24px;height:24px;border-radius:6px;background:#fff;color:#06c755;
+    display:grid;place-items:center;font-size:13px;font-weight:900;
+  }
+  .cta-wrap{margin-top:22px}
+  .cta-bullets{
+    margin-top:10px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+  }
+  .cta-bullets span{font-size:12px;color:var(--muted);font-weight:700}
+  .cta-bullets span::before{content:"✓";color:#06c755;font-weight:900;margin-right:3px}
+
+  .counter{
+    margin-top:16px;padding:10px 14px;border-radius:10px;
+    background:#0d1626;color:#fff;text-align:center;
+    font-size:12.5px;font-weight:700;letter-spacing:.02em;
+    display:flex;gap:8px;justify-content:center;align-items:center;
+  }
+  .counter .dot{width:8px;height:8px;border-radius:50%;background:#06c755;animation:blink 1.2s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .counter b{color:#ffd43b}
+
+  /* === Section === */
+  section{padding:50px 0}
+  section.dark{background:#0a0f1c;color:#fff}
+  section.dark .section-lead{color:rgba(255,255,255,.72)}
+  section.alt{background:#f3f6fc}
+  .kicker{
+    display:inline-block;font-size:11px;font-weight:900;letter-spacing:.18em;
+    color:#1f6feb;text-transform:uppercase;margin-bottom:10px;
+    padding:4px 10px;background:rgba(31,111,235,.08);border-radius:6px;
+  }
+  section.dark .kicker{color:#ffd43b;background:rgba(255,212,59,.12)}
+  h2{margin:0 0 16px;font-size:28px;line-height:1.3;letter-spacing:-.025em;font-weight:900}
+  h2 .em{color:#1f6feb}
+  h2 .hl{
+    background:linear-gradient(180deg, transparent 60%, #ffd43b 60%, #ffd43b 92%, transparent 92%);
+    padding:0 4px;
+  }
+  section.dark h2 .em{color:#4c8bff}
+  .section-lead{color:var(--muted);font-size:14.5px;line-height:1.9;margin:0 0 24px}
+
+  /* Pain */
+  .pain-list{display:grid;gap:10px}
+  .pain{
+    padding:16px 18px;border-radius:14px;background:#fff;
+    border:1px solid var(--line);box-shadow:0 2px 0 rgba(13,22,38,.04);
+    font-size:15px;font-weight:700;line-height:1.6;
+    display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:center;
+  }
+  .pain .x{
+    width:28px;height:28px;border-radius:50%;
+    background:#ff4d4d;color:#fff;font-weight:900;
+    display:grid;place-items:center;font-size:14px;flex:none;
+  }
+  .pain-sum{
+    margin-top:18px;padding:16px 18px;border-radius:14px;
+    background:linear-gradient(135deg,#0d1626,#2a3756);color:#fff;
+    font-size:15px;font-weight:800;line-height:1.7;text-align:center;
+  }
+  .pain-sum b{color:#ffd43b}
+
+  /* Solution */
+  .sol-wrap{
+    background:#0a0f1c;color:#fff;
+    padding:56px 0 60px;position:relative;overflow:hidden;
+  }
+  .sol-wrap::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(31,111,235,.2), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(255,212,59,.10), transparent 40%);
+    pointer-events:none;
+  }
+  .sol-wrap .container{position:relative}
+  .sol-wrap h2{color:#fff;font-size:30px;margin-bottom:8px}
+  .sol-wrap .section-lead{color:rgba(255,255,255,.75)}
+  .sol-phone{
+    margin:28px auto 0;width:min(80%, 340px);position:relative;
+    border-radius:26px;
+  }
+  .sol-phone .ph{border-color:#fff;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+  .sol-phone .label{
+    position:absolute;top:22px;left:-6px;z-index:20;
+    background:#ff4d4d;color:#fff;font-weight:900;
+    padding:7px 12px;font-size:11px;letter-spacing:.04em;
+    border-radius:0 6px 6px 0;box-shadow:0 6px 16px rgba(0,0,0,.3);
+  }
+  .sol-phone .tag{
+    position:absolute;bottom:12px;right:-10px;z-index:20;
+    background:#ffd43b;color:#0d1626;font-weight:900;
+    padding:6px 11px;border-radius:8px;font-size:11px;
+    box-shadow:0 6px 16px rgba(0,0,0,.3);
+  }
+  .sol-note{
+    margin-top:22px;text-align:center;
+    color:rgba(255,255,255,.92);font-size:14px;font-weight:700;
+  }
+  .sol-note b{color:#ffd43b}
+
+  /* === Scrollable screenshot strip === */
+  .ss-strip{
+    margin:24px -16px 0;padding:6px 16px 22px;
+    display:grid;grid-auto-flow:column;grid-auto-columns:68%;gap:16px;
+    overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .ss-strip::-webkit-scrollbar{display:none}
+  @media(min-width:520px){ .ss-strip{grid-auto-columns:42%} }
+  .ss-card{
+    scroll-snap-align:center;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .ss-card-img{
+    border-radius:22px;overflow:hidden;background:#0b1222;
+    box-shadow:0 20px 44px rgba(0,0,0,.35);
+  }
+  .ss-card-img img{width:100%;display:block}
+  .ss-card-img img{width:100%;display:block}
+  .ss-card-cap{
+    padding:4px;color:#fff;
+    font-size:12.5px;font-weight:700;text-align:center;line-height:1.55;
+  }
+  .ss-card-cap b{color:#ffd43b;font-size:14px;display:block;margin-bottom:4px}
+
+  /* Swipe hint */
+  .swipe-hint{
+    text-align:center;color:rgba(255,255,255,.6);
+    font-size:11px;font-weight:700;letter-spacing:.15em;
+    margin-top:4px;
+  }
+  .swipe-hint::before{content:"← ";opacity:.6}
+  .swipe-hint::after{content:" →";opacity:.6}
+
+  /* Numbers */
+  .nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:18px}
+  .num-box{
+    padding:14px 8px;border-radius:12px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+    text-align:center;
+  }
+  .num-box .n{font-size:26px;font-weight:900;color:#ffd43b;letter-spacing:-.03em;line-height:1;display:block}
+  .num-box .l{margin-top:6px;font-size:11px;color:rgba(255,255,255,.7);font-weight:700;line-height:1.4}
+
+  /* Feature blocks */
+  .feat-list{display:grid;gap:14px;margin-top:20px}
+  .feat{
+    padding:18px;border-radius:16px;background:#fff;border:1px solid var(--line);
+    box-shadow:0 2px 0 rgba(13,22,38,.04);
+  }
+  .feat-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .feat-ic{
+    width:36px;height:36px;border-radius:10px;flex:none;
+    background:linear-gradient(135deg,#1f6feb,#4c8bff);color:#fff;
+    display:grid;place-items:center;font-weight:900;font-size:16px;
+  }
+  .feat-title{font-size:16px;font-weight:900;flex:1;line-height:1.35}
+  .feat p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.8}
+  .feat-tag{
+    display:inline-block;margin-top:6px;padding:3px 10px;border-radius:6px;
+    background:#e6f7ec;color:#06a13e;font-size:10.5px;font-weight:900;letter-spacing:.04em;
+  }
+
+  /* Genre chips */
+  .genre{
+    margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;
+  }
+  .genre span{
+    padding:6px 11px;border-radius:999px;
+    background:#f3f6fc;border:1px solid rgba(31,111,235,.18);
+    font-size:11.5px;font-weight:700;color:#1f6feb;
+  }
+
+  /* Voice */
+  .voice-list{display:grid;gap:12px}
+  .voice{
+    padding:18px;border-radius:14px;background:#fff;
+    border:1px solid var(--line);position:relative;
+    box-shadow:0 2px 0 rgba(13,22,38,.04);
+  }
+  .voice::before{
+    content:"“";position:absolute;top:-10px;left:14px;
+    font-size:52px;color:#1f6feb;font-family:Georgia,serif;
+    line-height:1;font-weight:700;
+  }
+  .voice p{margin:0 0 10px;font-size:14px;line-height:1.75;color:var(--text);font-weight:600}
+  .voice .who{display:flex;gap:10px;align-items:center;color:var(--sub);font-size:12px;font-weight:700}
+  .voice .who .av{
+    width:32px;height:32px;border-radius:50%;
+    background:linear-gradient(135deg,#1f6feb,#4c8bff);
+    color:#fff;display:grid;place-items:center;font-weight:900;font-size:13px;
+  }
+
+  /* Invest teaser */
+  .invest{
+    margin:0;padding:50px 0;background:
+      linear-gradient(135deg,#0a0f1c 0%, #1a2140 100%);color:#fff;
+    position:relative;overflow:hidden;
+  }
+  .invest::before{
+    content:"";position:absolute;right:-20px;top:-20px;width:140px;height:140px;
+    background:radial-gradient(circle,#06b36c 0%,transparent 70%);opacity:.4;
+  }
+  .invest .kicker{background:rgba(6,179,108,.18);color:#2aeb9a}
+  .invest h2{color:#fff}
+  .invest h2 .em{color:#2aeb9a}
+  .invest p{color:rgba(255,255,255,.78);font-size:14.5px;line-height:1.9;margin:0 0 20px}
+  .invest-chart{
+    margin:10px 0 20px;padding:18px;border-radius:14px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    display:grid;gap:8px;
+  }
+  .invest-row{
+    display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+    padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;
+    font-size:13px;font-weight:700;
+  }
+  .invest-row .dn{color:#ff6b6b;font-weight:900}
+  .invest-cta{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 20px;border-radius:12px;
+    background:#2aeb9a;color:#0a0f1c;font-weight:900;font-size:15px;
+    box-shadow:0 10px 24px rgba(42,235,154,.30);
+  }
+  .invest-cta:hover{transform:translateY(-1px)}
+  .invest-cta::after{content:"→";font-size:18px}
+
+  /* Steps */
+  .steps{display:grid;gap:10px;margin-top:8px}
+  .step{
+    padding:18px;border-radius:14px;background:#fff;border:1px solid var(--line);
+    display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;
+    box-shadow:0 2px 0 rgba(13,22,38,.04);
+  }
+  .step-num{
+    width:44px;height:44px;border-radius:12px;
+    background:#0d1626;color:#ffd43b;
+    font-weight:900;font-size:18px;
+    display:grid;place-items:center;flex:none;
+  }
+  .step-title{font-size:16px;font-weight:900;margin:4px 0 4px}
+  .step p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.8}
+
+  /* FAQ */
+  .faq-list{display:grid;gap:10px}
+  details.faq{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  details.faq[open]{box-shadow:var(--shadow)}
+  details.faq summary{
+    list-style:none;cursor:pointer;padding:16px 44px 16px 18px;
+    font-size:14.5px;font-weight:800;position:relative;line-height:1.6;
+  }
+  details.faq summary::-webkit-details-marker{display:none}
+  details.faq summary::before{content:"Q. ";color:#1f6feb;font-weight:900}
+  details.faq summary::after{
+    content:"";position:absolute;right:18px;top:50%;width:9px;height:9px;
+    border-right:2px solid #1f6feb;border-bottom:2px solid #1f6feb;
+    transform:translateY(-70%) rotate(45deg);transition:transform .2s ease;
+  }
+  details.faq[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+  details.faq .faq-body{padding:0 18px 18px;color:var(--muted);font-size:13px;line-height:1.9}
+  details.faq .faq-body::before{content:"A. ";color:#06c755;font-weight:900}
+
+  /* Final */
+  .final{
+    padding:60px 0 70px;color:#fff;text-align:center;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(31,111,235,.35), transparent 50%),
+      radial-gradient(circle at 80% 90%, rgba(6,199,85,.25), transparent 50%),
+      linear-gradient(180deg,#0a0f1c 0%, #131c35 100%);
+  }
+  .final h2{color:#fff;font-size:32px;margin-bottom:12px;line-height:1.25}
+  .final h2 .hl{background:linear-gradient(180deg,transparent 60%, #ffd43b 60%, #ffd43b 92%, transparent 92%);padding:0 4px;color:#fff}
+  .final p{margin:0 0 24px;color:rgba(255,255,255,.85);font-size:15px;line-height:1.9}
+  .final .counter{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15)}
+
+  footer{padding:22px 0 34px;text-align:center;color:var(--sub);font-size:11.5px;line-height:2;background:#0a0f1c}
+  footer a{color:#9aa4b8}
+  footer .divider{margin:0 8px;opacity:.4}
+
+  .sticky-cta{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.95) 30%, #fff);
+    transform:translateY(130%);transition:transform .25s ease;pointer-events:none;
+    border-top:1px solid var(--line);
+  }
+  .sticky-cta.on{transform:translateY(0);pointer-events:auto}
+  .sticky-cta .cta{min-height:52px;font-size:15px;border-radius:12px}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div>LINEニュースbot</div>
+    </div>
+
+    <div class="shout">正直、もうニュースアプリ開いてないでしょ？</div>
+
+    <h1 style="opacity: 1">
+      ニュース、<br>
+      <span class="strike">長文で読む</span><br>
+      時代、<span class="hit">終わった。</span>
+    </h1>
+
+    <p class="sub-lead">
+      <b>朝5時、寝てる間に届く。</b><br>
+      起きたらLINEに今日の話題が5本。<br>
+      1分眺めるだけで準備完了。
+    </p>
+
+    <!-- HERO: 実機スクショ 3枚 -->
+    <div class="hero-ss">
+      <div class="stamp">朝<b>1分</b>で<br>完了</div>
+      <div class="ss ss-1"><img src="news_assets\5a56b2de-4d19-4045-861d-b09a0859dfed.jpg" alt="朝5時のニュース配信"></div>
+      <div class="ss ss-2"><img src="news_assets\df5c35af-79a4-47b1-8b81-a5ca6a341205.jpg" alt="リッチメニューで1タップ"></div>
+      <div class="ss ss-3"><img src="news_assets\bded1e09-c6d5-4fc0-b5c1-1a0a35dbafac.jpg" alt="用語をその場で質問"></div>
+    </div>
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>LINEで友だち追加（無料）</span>
+      </a>
+      <div class="cta-bullets">
+        <span>登録30秒</span>
+        <span>アプリ不要</span>
+        <span>カード不要</span>
+      </div>
+      <div class="counter">
+        <span class="dot"></span>
+        今この瞬間も、忙しい人が<b>LINEで情報収集</b>してます
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAIN ============ -->
+<section class="alt">
+  <div class="container">
+    <div class="kicker">Real talk</div>
+    <h2>心当たり、<br><span class="hl">ありますよね？</span></h2>
+
+    <div class="pain-list">
+      <div class="pain"><div class="x">✕</div><div>ニュースアプリ開いて、結局スクロールして閉じる</div></div>
+      <div class="pain"><div class="x">✕</div><div>新聞アプリ、先月から一度も開いてない</div></div>
+      <div class="pain"><div class="x">✕</div><div>会議で話題が出て、うなずくしかできなかった</div></div>
+      <div class="pain"><div class="x">✕</div><div>「〇〇って知ってる？」で固まる回数が増えた</div></div>
+      <div class="pain"><div class="x">✕</div><div>記事が長すぎて、結論まで辿り着かない</div></div>
+    </div>
+
+    <div class="pain-sum">
+      大丈夫、<br>
+      <b>悪いのはあなたじゃない。</b><br>
+      ニュースが、長すぎるだけ。
+    </div>
+  </div>
+</section>
+
+<!-- ============ SOLUTION ============ -->
+<section class="sol-wrap">
+  <div class="container">
+    <div class="kicker">Solution</div>
+    <h2>だから、<br>LINEに<span style="color:#ffd43b">全部まとめた。</span></h2>
+    <p class="section-lead">
+      毎朝<b style="color:#fff">5時</b>、寝てる間に配信。<br>
+      AIが選んだ重要ニュース<b style="color:#fff">5本</b>だけ、<br>
+      起きたらLINEに届いてる。
+    </p>
+
+    <!-- SOLUTION: 実機スクショ -->
+    <div class="sol-big">
+      <div class="label">⚡ 実際のLINE画面</div>
+      <img src="news_assets\2512273e-7494-43ac-bfb4-7c5551195035.jpg" alt="朝5時に届くニュース配信">
+      <div class="tag">毎朝5時配信</div>
+    </div>
+
+    <div class="sol-note">
+      長文は読まない。<br>
+      <b>5本、1分、それで終わり。</b>
+    </div>
+
+    <div class="nums">
+      <div class="num-box"><span class="n">5本</span><span class="l">厳選ニュース</span></div>
+      <div class="num-box"><span class="n">朝5時</span><span class="l">寝てる間に配信</span></div>
+      <div class="num-box"><span class="n">0円</span><span class="l">ずっと無料</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ USE CASES (horizontal phone strip) ============ -->
+<section class="dark">
+  <div class="container">
+    <div class="kicker">Use case</div>
+    <h2>これ、<span style="color:#ffd43b">全部LINEでできます。</span></h2>
+    <p class="section-lead">横にスワイプで各画面を確認できます。</p>
+  </div>
+
+  <div class="ss-strip">
+
+    <!-- ① 朝の配信 -->
+    <div class="ss-card">
+      <div class="ss-card-img"><img src="news_assets\2512273e-7494-43ac-bfb4-7c5551195035.jpg" alt="朝5時のニュース配信"></div>
+      <div class="ss-card-cap"><b>① 朝5時に5本届く</b>寝てる間に今日の話題が配信</div>
+    </div>
+
+    <!-- ② 番号で深掘り -->
+    <div class="ss-card">
+      <div class="ss-card-img"><img src="news_assets\468d9129-132b-422a-bbc7-c8d0adda5d96.jpg" alt="番号で深掘り"></div>
+      <div class="ss-card-cap"><b>② 番号で深掘り</b>「5 詳しく」で追加解説が届く</div>
+    </div>
+
+    <!-- ③ 用語質問 -->
+    <div class="ss-card">
+      <div class="ss-card-img"><img src="news_assets\df5c35af-79a4-47b1-8b81-a5ca6a341205.jpg" alt="用語をその場で質問"></div>
+      <div class="ss-card-cap"><b>③ 用語をその場で質問</b>「半導体ってなに？」にその場で回答</div>
+    </div>
+
+    <!-- ④ 会話ネタ -->
+    <div class="ss-card">
+      <div class="ss-card-img"><img src="news_assets\7e1320ae-cb80-4af2-a2e8-7d8fd97d8019.jpg" alt="会話ネタを生成"></div>
+      <div class="ss-card-cap"><b>④ 会話ネタを生成</b>雑談・職場でそのまま使える</div>
+    </div>
+
+    <!-- ⑤ リッチメニュー -->
+    <div class="ss-card">
+      <div class="ss-card-img"><img src="news_assets\bded1e09-c6d5-4fc0-b5c1-1a0a35dbafac.jpg" alt="リッチメニューで1タップ"></div>
+      <div class="ss-card-cap"><b>⑤ いつでも1タップ</b>下のメニューから好きなタイミングで</div>
+    </div>
+
+  </div>
+
+  <div class="swipe-hint">SWIPE</div>
+
+  <div class="container" style="margin-top:20px">
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>この画面を自分のLINEでも見る</span>
+      </a>
+      <div class="cta-bullets">
+        <span style="color:rgba(255,255,255,.7)">無料</span>
+        <span style="color:rgba(255,255,255,.7)">30秒</span>
+        <span style="color:rgba(255,255,255,.7)">アプリ不要</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES DETAIL ============ -->
+<section>
+  <div class="container">
+    <div class="kicker">Features</div>
+    <h2>このbotで<br><span class="em">できること</span></h2>
+    <p class="section-lead">ニュースだけじゃない。知りたいときに、知りたいことが、LINEで完結します。</p>
+
+    <div class="feat-list">
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-ic">1</div>
+          <div class="feat-title">朝5時のニュース要約配信</div>
+        </div>
+        <p>重要ニュース<b>5本</b>を、要点だけ3秒で読める形で整理。寝てる間に届くから、起きたらLINEを開くだけ。</p>
+        <span class="feat-tag">ずっと無料</span>
+      </div>
+
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-ic">2</div>
+          <div class="feat-title">ジャンル選択</div>
+        </div>
+        <p>経済・仕事・AI・テック・国際・暮らし・話題・スポーツ・海外から、興味あるジャンルだけに絞れます。</p>
+        <div class="genre">
+          <span>経済</span><span>仕事</span><span>AI・テック</span>
+          <span>国際</span><span>暮らし</span><span>話題</span>
+          <span>スポーツ</span><span>海外</span>
+        </div>
+        <div style="margin-top:10px"><span class="feat-tag">ずっと無料</span></div>
+      </div>
+
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-ic">3</div>
+          <div class="feat-title">オンデマンド配信</div>
+        </div>
+        <p>朝の配信以外にも、<b>「ニュース」と送るだけ</b>で最新5本をいつでも取得。昼休み、移動中、気が向いたときに。</p>
+        <span class="feat-tag">ずっと無料</span>
+      </div>
+
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-ic">4</div>
+          <div class="feat-title">番号で深掘り解説</div>
+        </div>
+        <p>気になる記事は「1 詳しく」のように番号で送るだけ。背景・影響・これからの見通しまでAIがまとめて解説。</p>
+      </div>
+
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-ic">5</div>
+          <div class="feat-title">用語解説・なんでも質問</div>
+        </div>
+        <p>「変動金利ってなに？」「これ何で話題？」をそのまま送れる。人に聞きづらい言葉も、LINEでサクッと解決。</p>
+      </div>
+
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-ic">6</div>
+          <div class="feat-title">会話ネタ生成</div>
+        </div>
+        <p>「会話ネタ」と送るだけで、そのまま使える話題・返し・一言フレーズをセットで提案。雑談・職場・飲み会で困らない。</p>
+      </div>
+
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-ic">7</div>
+          <div class="feat-title">記事リンクも取得できる</div>
+        </div>
+        <p>「リンク」と送れば、元記事URLを取得。もっと深く読みたいときだけ、原文へアクセスできます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VOICE ============ -->
+<section class="alt">
+  <div class="container">
+    <div class="kicker">Voice</div>
+    <h2>使った人の<br><span class="em">正直な感想</span></h2>
+
+    <div class="voice-list">
+      <div class="voice">
+        <p>ニュースアプリ全部消した。<br>朝のトーク見るだけで、その日の会議で話が噛み合うようになった。</p>
+        <div class="who"><div class="av">A</div>営業 / 32歳</div>
+      </div>
+      <div class="voice">
+        <p>「〇〇ってなに？」みたいな、人に聞きづらい質問をそのまま送れるのが本当に助かる。検索しても長すぎて読まないので。</p>
+        <div class="who"><div class="av">M</div>企画 / 28歳</div>
+      </div>
+      <div class="voice">
+        <p>会話ネタ機能がヤバい。取引先との雑談で困ることがなくなった。朝5時配信だから、通勤中に見れば準備完了。</p>
+        <div class="who"><div class="av">K</div>経営 / 41歳</div>
+      </div>
+      <div class="voice">
+        <p>ジャンル絞れるのがいい。経済とAIだけにしてるけど、それでも5本ちゃんと届く。無駄なニュースを読まなくていいのがストレスフリー。</p>
+        <div class="who"><div class="av">T</div>エンジニア / 35歳</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INVEST TEASER ============ -->
+<section class="invest">
+  <div class="container">
+    <div class="kicker">+ Bonus</div>
+    <h2>投資してる人には<br><span class="em">裏メニュー</span>もある。</h2>
+    <p>
+      ニュースだけじゃなく、<b style="color:#fff">日経の急落株・相場・補助金</b>も引き出せます。<br>
+      投資している人向けの詳しい内容は、こちらで別途。
+    </p>
+
+    <div class="invest-chart">
+      <div class="invest-row"><span>① 光学精機HD / 1,696円</span><span class="dn">-10.4%</span></div>
+      <div class="invest-row"><span>② 東邦素材 / 553円</span><span class="dn">-6.7%</span></div>
+      <div class="invest-row"><span>③ 関東電力HD / 585円</span><span class="dn">-6.5%</span></div>
+    </div>
+
+    <a class="invest-cta" href="ad_invest.html">投資機能の詳細はこちら</a>
+  </div>
+</section>
+
+<!-- ============ STEPS ============ -->
+<section>
+  <div class="container">
+    <div class="kicker">How to start</div>
+    <h2>始め方は<br><span class="hl">たった3ステップ</span></h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <div class="step-title">LINEで友だち追加</div>
+          <p>下のボタンをタップ。30秒で追加完了。カード登録もメールも不要です。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <div class="step-title">ジャンルを選ぶ（任意）</div>
+          <p>受け取りたいジャンルを選択。迷ったら全ジャンルのままでOK。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <div class="step-title">寝る。起きる。LINEを開く。</div>
+          <p>朝5時に自動配信。起きた時にはもう今日のニュース5本が届いています。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>LINEで友だち追加（無料）</span>
+      </a>
+      <div class="cta-bullets">
+        <span>登録30秒</span>
+        <span>アプリ不要</span>
+        <span>カード不要</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="alt">
+  <div class="container">
+    <div class="kicker">FAQ</div>
+    <h2>不安、<br><span class="em">全部答えます</span></h2>
+
+    <div class="faq-list">
+      <details class="faq">
+        <summary>本当に無料？あとでお金取られない？</summary>
+        <div class="faq-body">ニュース要約・ジャンル選択・オンデマンド配信など基本機能はずっと無料です。カード登録もありません。一部高度な機能（深掘り解説、相場、急落株など）はお試し期間後に有料プランに移行しますが、無料でも十分使えます。</div>
+      </details>
+      <details class="faq">
+        <summary>登録、面倒じゃない？</summary>
+        <div class="faq-body">ボタンをタップするだけ。アプリのインストール、会員登録、メールアドレスの入力、すべて不要です。所要時間は30秒です。</div>
+      </details>
+      <details class="faq">
+        <summary>朝5時って早すぎない？通知で起きない？</summary>
+        <div class="faq-body">LINEの通知をオフにしておけば音は鳴りません。あくまで「寝てる間に準備完了している」状態を作るための配信時間です。起きた時にトークを開けば、今日のニュースが待っています。</div>
+      </details>
+      <details class="faq">
+        <summary>やめたくなったら？</summary>
+        <div class="faq-body">LINEのブロック機能、または配信停止操作でいつでも止められます。料金は発生しません。</div>
+      </details>
+      <details class="faq">
+        <summary>怪しくないですか？</summary>
+        <div class="faq-body">公式LINEアカウントの仕組みを使っているので、個人情報を登録する必要はありません。友だち追加して合わなければブロックするだけ。リスクゼロで試せます。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL ============ -->
+<section class="final" id="final">
+  <div class="container">
+    <h2>ニュース探し、<br><span class="hl">今日で卒業。</span></h2>
+    <p>
+      明日の朝5時、<br>
+      寝てる間にLINEに届きます。<br>
+      あとは起きて開くだけ。
+    </p>
+    <a class="cta" href="#" data-cta="free">
+      <span class="line-ic">L</span>
+      <span>LINEで友だち追加（無料）</span>
+    </a>
+    <div class="counter" style="margin-top:18px">
+      <span class="dot"></span>
+      明日の朝、ニュースに困らない自分になる
+    </div>
+  </div>
+</section>
+
+<footer>
+  <a href="terms.html">利用規約</a><span class="divider">/</span>
+  <a href="privacy.html">プライバシー</a>
+  <br>
+  <span style="opacity:.7">© LINEニュースbot</span>
+</footer>
+
+<div class="sticky-cta" id="stickyCta">
+  <div class="container">
+    <a class="cta" href="#" data-cta="free">
+      <span class="line-ic">L</span>
+      <span>無料でLINE追加（30秒）</span>
+    </a>
+  </div>
+</div>
+
+<script>
+  const LINE_ADD_URL = "https://lin.ee/zwFVeLc";
+  document.querySelectorAll('[data-cta="free"]').forEach(a=>a.href = LINE_ADD_URL);
+
+  const sticky = document.getElementById("stickyCta");
+  const final = document.getElementById("final");
+  let lastShow = false;
+  window.addEventListener("scroll", ()=>{
+    const sc = window.scrollY;
+    const finalTop = final.getBoundingClientRect().top + window.scrollY;
+    const show = sc > 500 && (finalTop - sc) > 300;
+    if (show !== lastShow){
+      sticky.classList.toggle("on", show);
+      lastShow = show;
+    }
+  }, {passive:true});
+</script>
+</body>
+</html>
