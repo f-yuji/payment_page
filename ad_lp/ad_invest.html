@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>急落株・相場をLINEで即確認 | LINEニュースbot</title>
+<meta name="description" content="急落株チェック、相場確認、投資ニュースをLINEで手軽に。情報収集の時間を短縮できる、毎日使える投資情報ツール。無料から始められます。">
+<style>
+  :root {
+    --bg:      #070c18;
+    --surface: #0d1626;
+    --surf2:   #111e33;
+    --border:  rgba(255,255,255,.07);
+    --ba:      rgba(0,212,170,.22);
+    --text:    #e2e8f4;
+    --muted:   #7a8ba8;
+    --sub:     #4d6080;
+    --accent:  #00d4aa;
+    --ad:      rgba(0,212,170,.12);
+    --red:     #ff4757;
+    --rd:      rgba(255,71,87,.12);
+    --gold:    #ffd43b;
+    --lg:      #06c755;
+    --max:     560px;
+  }
+
+  *  { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  .container { width: min(calc(100% - 32px), var(--max)); margin: 0 auto; }
+
+  /* ── typography ── */
+  .kicker {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); background: var(--ad);
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 14px;
+  }
+  h2 {
+    font-size: clamp(26px, 7.5vw, 36px);
+    font-weight: 900; line-height: 1.18; letter-spacing: -.035em; margin-bottom: 16px;
+  }
+  .em  { color: var(--accent); }
+  .dn  { color: var(--red);    }
+  .up  { color: var(--accent); }
+  .section-lead { color: var(--muted); font-size: 14px; line-height: 1.9; margin-bottom: 28px; }
+
+  /* ── CTA ── */
+  .cta {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 17px 20px;
+    background: var(--lg); color: #fff;
+    font-size: 16px; font-weight: 800; border-radius: 14px; letter-spacing: .01em;
+    box-shadow: 0 8px 28px rgba(6,199,85,.28);
+    transition: transform .14s, box-shadow .14s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cta:active { transform: scale(.97); box-shadow: 0 4px 14px rgba(6,199,85,.22); }
+  .line-ic {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: rgba(255,255,255,.2); display: grid; place-items: center;
+    font-size: 13px; font-weight: 900; flex: none;
+  }
+  .cta-wrap { margin-bottom: 4px; }
+  .cta-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 10px; }
+  .cta-bullets {
+    display: flex; justify-content: center; gap: 16px;
+    margin-top: 10px; font-size: 12px; color: var(--muted);
+  }
+  .cta-bullets span::before { content: "✓ "; color: var(--accent); }
+
+  /* ══════════════════════════════
+     1. HERO
+  ══════════════════════════════ */
+  .hero {
+    position: relative; padding: 28px 0 52px; overflow: hidden;
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,.04) 1px, transparent 1px);
+    background-size: 36px 36px;
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,212,170,.09) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .hero .container { position: relative; z-index: 1; }
+
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 22px; font-size: 13px; font-weight: 700; color: var(--muted);
+  }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, #00d4aa, #0088cc);
+    display: grid; place-items: center;
+    font-size: 13px; font-weight: 900; color: #fff;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--rd); border: 1px solid rgba(255,71,87,.28);
+    border-radius: 6px; padding: 5px 11px;
+    font-size: 11px; font-weight: 700; color: var(--red);
+    margin-bottom: 18px; letter-spacing: .02em;
+  }
+  .hero-badge .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+    animation: blink 1.6s infinite;
+    flex: none;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; } 50% { opacity: .35; }
+  }
+
+  h1 {
+    font-size: clamp(34px, 10vw, 52px);
+    font-weight: 900; line-height: 1.1; letter-spacing: -.045em; margin-bottom: 16px;
+  }
+  h1 .al { display: block; color: var(--accent); }
+
+  .hero-sub {
+    font-size: 15px; line-height: 1.85; color: var(--muted); margin-bottom: 28px;
+  }
+  .hero-sub b { color: var(--text); }
+
+  /* LINE mock */
+  .hero-mock { margin: 32px 8px 28px; }
+  .lmock {
+    background: #9dbfe0;
+    border-radius: 22px; overflow: hidden;
+    box-shadow: 0 28px 60px rgba(0,0,0,.55);
+    border: 2.5px solid rgba(255,255,255,.09);
+    max-width: 296px; margin: 0 auto;
+  }
+  .lm-stat {
+    background: #9dbfe0; padding: 10px 16px 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 700; color: #1a2e4a;
+  }
+  .lm-stat .r { display: flex; gap: 4px; align-items: center; font-size: 9px; opacity: .8; }
+  .lm-head {
+    background: #9dbfe0; padding: 6px 12px 8px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(0,0,0,.1);
+  }
+  .lm-av {
+    width: 28px; height: 28px; border-radius: 9px;
+    background: #1f3d6e; color: #fff;
+    font-size: 11px; font-weight: 800;
+    display: grid; place-items: center; flex: none;
+  }
+  .lm-head-name { font-size: 12px; font-weight: 700; color: #1a2e4a; }
+  .lm-body {
+    background: #9dbfe0; padding: 10px 10px 8px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .lm-row { display: flex; align-items: flex-end; gap: 6px; }
+  .lm-row.me { justify-content: flex-end; }
+  .lm-bbl {
+    max-width: 84%; padding: 8px 11px; border-radius: 12px;
+    font-size: 11px; line-height: 1.65; white-space: pre-line; word-break: break-word;
+  }
+  .lm-bbl.them {
+    background: #fff; color: #1a2e4a; border-top-left-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+  }
+  .lm-bbl.me {
+    background: #87d65a; color: #1a2e4a;
+    border-top-right-radius: 3px; font-weight: 700;
+  }
+  .lm-bbl b   { font-weight: 800; }
+  .lm-bbl .dn { color: #c0151e; font-weight: 800; }
+  .lm-bbl .up { color: #0c6e39; font-weight: 800; }
+  .lm-time { font-size: 8px; color: rgba(26,46,74,.45); align-self: flex-end; padding-bottom: 2px; }
+
+  .lm-menu {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    border-top: 1px solid rgba(0,0,0,.12);
+  }
+  .lm-menu .rm {
+    background: #0c1a2f; color: #c8d8f0;
+    padding: 10px 4px 8px; text-align: center;
+    font-size: 9px; font-weight: 700;
+    border-right: 1px solid rgba(255,255,255,.07);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .lm-menu .rm:nth-child(3n)        { border-right: none; }
+  .lm-menu .rm:nth-last-child(-n+3)  { border-bottom: none; }
+  .lm-menu .rm .ico { font-size: 14px; }
+
+  /* ══════════════════════════════
+     TICKER STRIP
+  ══════════════════════════════ */
+  .ticker-wrap {
+    overflow: hidden;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+  }
+  .ticker-inner {
+    display: flex; gap: 36px;
+    animation: tickmove 22s linear infinite;
+    width: max-content; white-space: nowrap;
+  }
+  @keyframes tickmove {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .tick-item {
+    display: flex; gap: 8px; align-items: center;
+    font-size: 12px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .tick-item .n  { color: var(--muted); }
+  .tick-item .v  { color: var(--text); }
+  .tick-item .cu { color: var(--accent); }
+  .tick-item .cd { color: var(--red); }
+
+  /* ══════════════════════════════
+     2. PAIN
+  ══════════════════════════════ */
+  .pain-section {
+    padding: 56px 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .pain-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .pain {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .pain .x {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--rd); border: 1px solid rgba(255,71,87,.3);
+    color: var(--red); font-size: 11px; font-weight: 900;
+    display: grid; place-items: center; flex: none; margin-top: 1px;
+  }
+  .pain p { font-size: 14px; line-height: 1.6; }
+  .pain-sum {
+    background: linear-gradient(135deg, var(--surf2), var(--bg));
+    border: 1px solid var(--ba);
+    border-radius: 12px; padding: 20px;
+    text-align: center; font-size: 15px; line-height: 1.85; margin-top: 20px;
+  }
+  .pain-sum b { color: var(--accent); font-weight: 800; }
+
+  /* ══════════════════════════════
+     3. FEATURES
+  ══════════════════════════════ */
+  .feat-section { padding: 56px 0; }
+  .feat-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+  .feat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 18px 16px;
+    position: relative; overflow: hidden;
+  }
+  .feat-card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--accent) 0%, transparent 100%);
+  }
+  .feat-card.red-card::before { background: linear-gradient(180deg, var(--red) 0%, transparent 100%); }
+
+  .feat-head { display: flex; align-items: center; gap: 11px; margin-bottom: 9px; }
+  .feat-ic {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--ad); border: 1px solid var(--ba);
+    display: grid; place-items: center; flex: none; font-size: 18px;
+  }
+  .feat-ic.r { background: var(--rd); border-color: rgba(255,71,87,.28); }
+  .feat-title { font-size: 15px; font-weight: 800; }
+  .feat-card p { font-size: 13px; color: var(--muted); line-height: 1.75; }
+
+  .mini-data {
+    margin-top: 12px; background: var(--bg);
+    border-radius: 8px; padding: 10px 12px;
+    font-family: ui-monospace, "SFMono-Regular", monospace;
+    font-size: 11.5px; line-height: 2;
+    font-variant-numeric: tabular-nums;
+  }
+  .mini-data .row { display: flex; justify-content: space-between; align-items: center; }
+  .mini-data .lbl { color: var(--muted); }
+  .mini-data .val { font-weight: 700; }
+
+  .feat-tag {
+    display: inline-block; margin-top: 12px;
+    padding: 3px 9px; border-radius: 4px;
+    background: var(--ad); color: var(--accent);
+    font-size: 10px; font-weight: 700;
+  }
+  .feat-tag.free { background: rgba(6,199,85,.12); color: var(--lg); }
+
+  /* ══════════════════════════════
+     4. BENEFITS
+  ══════════════════════════════ */
+  .benefit-section {
+    padding: 56px 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .benefit-list { display: flex; flex-direction: column; gap: 18px; margin-bottom: 32px; }
+  .benefit { display: flex; align-items: flex-start; gap: 14px; }
+  .benefit-num {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--ad); border: 1px solid var(--ba);
+    color: var(--accent); font-size: 13px; font-weight: 900;
+    display: grid; place-items: center; flex: none;
+  }
+  .benefit-body strong { font-size: 14px; font-weight: 800; display: block; margin-bottom: 4px; }
+  .benefit-body p { font-size: 13px; color: var(--muted); line-height: 1.75; }
+
+  /* ══════════════════════════════
+     5. SCENES
+  ══════════════════════════════ */
+  .scene-section { padding: 56px 0; }
+  .scene-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 32px; }
+  .scene-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 14px;
+    position: relative; overflow: hidden;
+  }
+  .scene-card::after {
+    content: ""; position: absolute; bottom: -10px; right: -10px;
+    width: 70px; height: 70px;
+    background: radial-gradient(circle, var(--ad), transparent 70%);
+    pointer-events: none;
+  }
+  .scene-time { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: .05em; margin-bottom: 6px; }
+  .scene-title { font-size: 14px; font-weight: 800; margin-bottom: 6px; }
+  .scene-desc { font-size: 12px; color: var(--muted); line-height: 1.65; }
+
+  /* ══════════════════════════════
+     6. STEPS
+  ══════════════════════════════ */
+  .steps-section {
+    padding: 56px 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .steps { display: flex; flex-direction: column; margin-bottom: 32px; }
+  .step { display: flex; gap: 16px; position: relative; }
+  .step:not(:last-child)::after {
+    content: ""; position: absolute; left: 19px; top: 42px; bottom: -8px; width: 2px;
+    background: linear-gradient(180deg, var(--accent) 0%, transparent 100%);
+  }
+  .step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--ad); border: 2px solid var(--accent);
+    color: var(--accent); font-size: 15px; font-weight: 900;
+    display: grid; place-items: center; flex: none; z-index: 1;
+    flex-shrink: 0;
+  }
+  .step-content { padding: 6px 0 36px; }
+  .step-label { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: .1em; margin-bottom: 4px; }
+  .step-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .step-content p { font-size: 13px; color: var(--muted); line-height: 1.75; }
+
+  /* ══════════════════════════════
+     7. FAQ
+  ══════════════════════════════ */
+  .faq-section { padding: 56px 0; }
+  .faq-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .faq {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .faq summary {
+    padding: 16px 18px; font-size: 14px; font-weight: 700;
+    cursor: pointer; list-style: none;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after {
+    content: "+"; font-size: 20px; font-weight: 300;
+    color: var(--accent); flex: none;
+    transition: transform .2s;
+  }
+  .faq[open] summary::after { transform: rotate(45deg); }
+  .faq-body {
+    padding: 14px 18px 16px;
+    font-size: 13px; color: var(--muted); line-height: 1.85;
+    border-top: 1px solid var(--border);
+  }
+
+  .disclaimer {
+    font-size: 10px; color: var(--sub); line-height: 1.85;
+    padding: 16px 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; margin-top: 20px;
+  }
+
+  /* ══════════════════════════════
+     8. FINAL CTA
+  ══════════════════════════════ */
+  .final {
+    padding: 60px 0 52px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .final::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 110%, rgba(0,212,170,.1), transparent 60%);
+    pointer-events: none;
+  }
+  .final .container { position: relative; z-index: 1; }
+  .final h2 { margin-bottom: 14px; }
+  .final p { color: var(--muted); font-size: 14px; line-height: 1.95; margin-bottom: 28px; }
+
+  /* ══════════════════════════════
+     FOOTER
+  ══════════════════════════════ */
+  footer {
+    padding: 24px 0 44px;
+    text-align: center; color: var(--sub);
+    font-size: 11px; line-height: 2.2;
+    background: var(--bg); border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--text); }
+  .divider { margin: 0 8px; opacity: .4; }
+
+  /* ══════════════════════════════
+     STICKY CTA
+  ══════════════════════════════ */
+  .sticky-cta {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(7,12,24,.94); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    transform: translateY(100%);
+    transition: transform .28s cubic-bezier(.25,.46,.45,.94);
+  }
+  .sticky-cta.on { transform: translateY(0); }
+  .sticky-cta .cta { min-height: 52px; font-size: 15px; border-radius: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     1. HERO
+══════════════════════════════ -->
+<section class="hero">
+  <div class="container">
+
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      LINEニュースbot
+    </div>
+
+    <div class="hero-badge">
+      <span class="dot"></span>
+      投資情報をLINEで即確認
+    </div>
+
+    <h1>
+      情報差が、<br>
+      <span class="al">そのまま</span>
+      差になる。
+    </h1>
+
+    <p class="hero-sub">
+      <b>急落株・相場・注目情報をLINEで即確認。</b><br>
+      投資判断のための情報収集を、もっと速く。
+    </p>
+
+    <!-- LINE MOCK -->
+    <div class="hero-mock">
+      <div class="lmock">
+        <div class="lm-stat">
+          <span>9:41</span>
+          <div class="r">▌▌▌ WiFi ▮▮</div>
+        </div>
+        <div class="lm-head">
+          <div class="lm-av">N</div>
+          <div class="lm-head-name">LINEニュースbot</div>
+        </div>
+        <div class="lm-body">
+          <div class="lm-row me">
+            <div class="lm-bbl me">急落株</div>
+            <div class="lm-time">9:41</div>
+          </div>
+          <div class="lm-row">
+            <div class="lm-av">N</div>
+            <div class="lm-bbl them">📉 <b>本日の急落株</b>
+
+① 光学精機HD / 1,696円
+   <span class="dn">▼ -10.4%</span>
+② 東邦素材 / 553円
+   <span class="dn">▼  -6.7%</span>
+③ 関東電力HD / 585円
+   <span class="dn">▼  -6.5%</span>
+
+「1 解説」で理由を確認</div>
+            <div class="lm-time">9:41</div>
+          </div>
+        </div>
+        <div class="lm-menu">
+          <div class="rm"><div class="ico">📉</div>急落株</div>
+          <div class="rm"><div class="ico">📊</div>相場</div>
+          <div class="rm"><div class="ico">📰</div>ニュース</div>
+          <div class="rm"><div class="ico">🔍</div>解説</div>
+          <div class="rm"><div class="ico">💰</div>補助金</div>
+          <div class="rm"><div class="ico">⚙</div>設定</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>LINEで無料登録</span>
+      </a>
+      <div class="cta-bullets">
+        <span>登録30秒</span>
+        <span>完全無料</span>
+        <span>アプリ不要</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TICKER STRIP -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <div class="tick-item"><span class="n">日経平均</span><span class="v">37,520</span><span class="cd">▼-1.21%</span></div>
+    <div class="tick-item"><span class="n">ドル円</span><span class="v">154.82</span><span class="cu">▲+0.31%</span></div>
+    <div class="tick-item"><span class="n">ゴールド</span><span class="v">3,320$</span><span class="cu">▲+0.08%</span></div>
+    <div class="tick-item"><span class="n">BTC/JPY</span><span class="v">16,245,000</span><span class="cd">▼-2.14%</span></div>
+    <div class="tick-item"><span class="n">S&amp;P 500</span><span class="v">5,247</span><span class="cd">▼-0.45%</span></div>
+    <div class="tick-item"><span class="n">NASDAQ</span><span class="v">16,384</span><span class="cd">▼-0.82%</span></div>
+    <div class="tick-item"><span class="n">日経平均</span><span class="v">37,520</span><span class="cd">▼-1.21%</span></div>
+    <div class="tick-item"><span class="n">ドル円</span><span class="v">154.82</span><span class="cu">▲+0.31%</span></div>
+    <div class="tick-item"><span class="n">ゴールド</span><span class="v">3,320$</span><span class="cu">▲+0.08%</span></div>
+    <div class="tick-item"><span class="n">BTC/JPY</span><span class="v">16,245,000</span><span class="cd">▼-2.14%</span></div>
+    <div class="tick-item"><span class="n">S&amp;P 500</span><span class="v">5,247</span><span class="cd">▼-0.45%</span></div>
+    <div class="tick-item"><span class="n">NASDAQ</span><span class="v">16,384</span><span class="cd">▼-0.82%</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     2. PAIN
+══════════════════════════════ -->
+<section class="pain-section">
+  <div class="container">
+    <div class="kicker">Pain Point</div>
+    <h2>こんなこと、<br><span class="em">ありませんか？</span></h2>
+
+    <div class="pain-list">
+      <div class="pain"><div class="x">✕</div><p>急落に気づくのが遅く、対応できなかった</p></div>
+      <div class="pain"><div class="x">✕</div><p>毎日相場をチェックするのが続かない</p></div>
+      <div class="pain"><div class="x">✕</div><p>情報収集に時間がかかりすぎる</p></div>
+      <div class="pain"><div class="x">✕</div><p>仕事中に証券口座を開きづらい</p></div>
+      <div class="pain"><div class="x">✕</div><p>何を見ればいいか、整理しきれない</p></div>
+    </div>
+
+    <div class="pain-sum">
+      情報収集の手間を減らすと、<br>
+      <b>判断に使える時間が増える。</b>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     3. FEATURES
+══════════════════════════════ -->
+<section class="feat-section">
+  <div class="container">
+    <div class="kicker">Features</div>
+    <h2>LINEで<br><span class="em">できること</span></h2>
+
+    <div class="feat-grid">
+
+      <div class="feat-card red-card">
+        <div class="feat-head">
+          <div class="feat-ic r">📉</div>
+          <div class="feat-title">急落株チェック</div>
+        </div>
+        <p>大きく下げた銘柄を一覧で確認。見に行かなくても、必要な情報がその場で取り出せます。</p>
+        <div class="mini-data">
+          <div class="row"><span class="lbl">光学精機HD</span><span class="val dn">▼ -10.4%</span></div>
+          <div class="row"><span class="lbl">東邦素材</span><span class="val dn">▼  -6.7%</span></div>
+          <div class="row"><span class="lbl">関東電力HD</span><span class="val dn">▼  -6.5%</span></div>
+        </div>
+        <span class="feat-tag">有料機能（お試し期間あり）</span>
+      </div>
+
+      <div class="feat-card red-card">
+        <div class="feat-head">
+          <div class="feat-ic r">🔍</div>
+          <div class="feat-title">急落理由の解説</div>
+        </div>
+        <p>なぜ下がったか、AIが背景と要因を要点にまとめて返信。長い記事を探さなくても、原因がわかります。</p>
+        <span class="feat-tag">有料機能（お試し期間あり）</span>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-head">
+          <div class="feat-ic">📊</div>
+          <div class="feat-title">相場確認</div>
+        </div>
+        <p>日経平均・ドル円・ゴールド・BTCなど主要相場を一言で確認。アプリを開かず、LINEで完結します。</p>
+        <div class="mini-data">
+          <div class="row"><span class="lbl">日経平均</span><span class="val dn">37,520　▼-1.2%</span></div>
+          <div class="row"><span class="lbl">ドル円</span><span class="val up">154.82　▲+0.3%</span></div>
+          <div class="row"><span class="lbl">ゴールド</span><span class="val up">3,320$　▲+0.1%</span></div>
+        </div>
+        <span class="feat-tag">有料機能（お試し期間あり）</span>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-head">
+          <div class="feat-ic">📰</div>
+          <div class="feat-title">投資関連ニュース</div>
+        </div>
+        <p>毎朝5時、AIが選んだ重要ニュース5本を自動配信。起きたらLINEに届いています。</p>
+        <span class="feat-tag free">無料</span>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-head">
+          <div class="feat-ic">⚡</div>
+          <div class="feat-title">スキマ時間で完結</div>
+        </div>
+        <p>LINEのメニューをタップするだけ。通勤中・昼休み・引け後の1〜2分で情報収集が終わります。</p>
+      </div>
+
+    </div>
+
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>LINEで無料登録</span>
+      </a>
+      <div class="cta-note">登録後すぐ全機能をお試しいただけます</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     4. BENEFITS
+══════════════════════════════ -->
+<section class="benefit-section">
+  <div class="container">
+    <div class="kicker">Why it works</div>
+    <h2>投資判断までの<br><span class="em">時間を短縮</span></h2>
+
+    <div class="benefit-list">
+      <div class="benefit">
+        <div class="benefit-num">1</div>
+        <div class="benefit-body">
+          <strong>情報収集が速い</strong>
+          <p>複数アプリを開いて調べる時間がなくなる。LINEだけで主要情報が揃います。</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-num">2</div>
+        <div class="benefit-body">
+          <strong>見逃しを減らせる</strong>
+          <p>朝のニュース配信＋急落通知で、気づかなかったでは済まない情報を拾えます。</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-num">3</div>
+        <div class="benefit-body">
+          <strong>スキマ時間で確認できる</strong>
+          <p>通勤・昼休み・引け後の数分で完結。まとまった時間がなくても毎日続けられます。</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-num">4</div>
+        <div class="benefit-body">
+          <strong>複数アプリ不要</strong>
+          <p>ニュース・相場・急落株をLINEひとつで。アプリを行き来する手間がなくなります。</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-num">5</div>
+        <div class="benefit-body">
+          <strong>毎日の習慣にしやすい</strong>
+          <p>普段使っているLINEだから、無理なく続けられます。新しいアプリを覚える必要もなし。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     5. SCENES
+══════════════════════════════ -->
+<section class="scene-section">
+  <div class="container">
+    <div class="kicker">Use Case</div>
+    <h2>毎日の流れに<br><span class="em">溶け込む</span></h2>
+
+    <div class="scene-grid">
+      <div class="scene-card">
+        <div class="scene-time">朝 / Morning</div>
+        <div class="scene-title">起きてすぐ確認</div>
+        <div class="scene-desc">毎朝5時に届くニュース。通勤前に1分でキャッチアップ完了。</div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-time">昼 / Noon</div>
+        <div class="scene-title">昼休みにサクッと</div>
+        <div class="scene-desc">前場の動きを確認。急落株メニューをタップするだけ。</div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-time">引け後 / Close</div>
+        <div class="scene-title">終値の振り返り</div>
+        <div class="scene-desc">相場確認で主要指標を一括チェック。今日の結果を把握。</div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-time">移動中 / Transit</div>
+        <div class="scene-title">電車・待ち時間に</div>
+        <div class="scene-desc">証券口座を開かなくてもLINEで完結。周囲を気にせず確認。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     6. STEPS
+══════════════════════════════ -->
+<section class="steps-section">
+  <div class="container">
+    <div class="kicker">How to Start</div>
+    <h2>始め方は<br><span class="em">3ステップ</span></h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-label">STEP 01</div>
+          <div class="step-title">LINEで友だち追加</div>
+          <p>下のボタンをタップ。アプリのインストールも、会員登録も不要です。30秒で完了します。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-label">STEP 02</div>
+          <div class="step-title">メニューから相場・急落株を見る</div>
+          <p>画面下のリッチメニューに「相場」「急落株」が表示されます。タップするだけで情報が届きます。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-label">STEP 03</div>
+          <div class="step-title">必要な情報を確認する</div>
+          <p>毎朝自動配信のニュースと合わせて、投資に使える情報収集がLINEで完結します。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>LINEで無料登録</span>
+      </a>
+      <div class="cta-bullets">
+        <span>登録30秒</span>
+        <span>カード不要</span>
+        <span>いつでも解除</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     7. FAQ
+══════════════════════════════ -->
+<section class="faq-section">
+  <div class="container">
+    <div class="kicker">FAQ</div>
+    <h2>よくある<br><span class="em">質問</span></h2>
+
+    <div class="faq-list">
+      <details class="faq">
+        <summary>無料で使えますか？</summary>
+        <div class="faq-body">ニュース要約・毎朝の配信など基本機能は無料でご利用いただけます。急落株・相場確認など投資向け機能は、登録後のお試し期間中にすべてお試しいただけます。その後は月額298円（税込）の有料プランへの移行が必要になります。</div>
+      </details>
+      <details class="faq">
+        <summary>投資初心者でも使えますか？</summary>
+        <div class="faq-body">使えます。急落株や相場の情報には、AIによる背景・理由の解説がついているので、専門用語がわからなくても読めます。なお本サービスは情報提供を目的としており、投資の勧誘・助言ではありません。</div>
+      </details>
+      <details class="faq">
+        <summary>難しい操作は必要ですか？</summary>
+        <div class="faq-body">不要です。LINEを友だち追加して、画面下のボタン（リッチメニュー）をタップするだけです。特別な操作は何もありません。</div>
+      </details>
+      <details class="faq">
+        <summary>いつでもやめられますか？</summary>
+        <div class="faq-body">いつでも解除できます。LINEのブロック機能、または配信停止の案内から手続きできます。有料プランも最低利用期間なし・解約金なしで、いつでも解約可能です。</div>
+      </details>
+    </div>
+
+    <div class="disclaimer">
+      ※ 本サービスは情報提供を目的としており、投資の勧誘・売買の助言を行うものではありません。投資判断はご自身の責任でお願いします。表示される数値はシステムによる取得値であり、正確性・完全性を保証するものではありません。
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     8. FINAL CTA
+══════════════════════════════ -->
+<section class="final" id="final">
+  <div class="container">
+    <div class="kicker">Get Started</div>
+    <h2>投資情報、<br><span class="em">もっとスマートに。</span></h2>
+    <p>
+      相場確認も急落チェックも、<br>
+      LINEで手軽に始められます。
+    </p>
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>LINEで無料登録</span>
+      </a>
+      <div class="cta-bullets">
+        <span>登録30秒</span>
+        <span>カード不要</span>
+        <span>いつでも解除</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     FOOTER
+══════════════════════════════ -->
+<footer>
+  <a href="../terms.html">利用規約</a><span class="divider">/</span>
+  <a href="../privacy.html">プライバシー</a><span class="divider">/</span>
+  <a href="../tokushoho.html">特定商取引法に基づく表記</a>
+  <br>
+  <span style="opacity:.6">© LINEニュースbot</span>
+</footer>
+
+<!-- STICKY CTA -->
+<div class="sticky-cta" id="stickyCta">
+  <div class="container">
+    <a class="cta" href="#" data-cta="free">
+      <span class="line-ic">L</span>
+      <span>LINEで無料登録（30秒）</span>
+    </a>
+  </div>
+</div>
+
+<script>
+  const LINE_ADD_URL = "https://lin.ee/zwFVeLc";
+  document.querySelectorAll('[data-cta="free"]').forEach(a => a.href = LINE_ADD_URL);
+
+  const sticky = document.getElementById("stickyCta");
+  const final  = document.getElementById("final");
+  let lastShow = false;
+  window.addEventListener("scroll", () => {
+    const sc       = window.scrollY;
+    const finalTop = final.getBoundingClientRect().top + window.scrollY;
+    const show     = sc > 400 && (finalTop - sc) > 300;
+    if (show !== lastShow) {
+      sticky.classList.toggle("on", show);
+      lastShow = show;
+    }
+  }, { passive: true });
+</script>
+</body>
+</html>
