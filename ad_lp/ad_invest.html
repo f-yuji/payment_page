@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>急落株・相場をLINEで即確認 | LINEニュースbot</title>
-<meta name="description" content="急落株チェック、相場確認、投資ニュースをLINEで手軽に。情報収集の時間を短縮できる、毎日使える投資情報ツール。無料から始められます。">
+<meta name="description" content="急落株チェック、相場確認、割安度・配当・PERなどの指標、投資ニュースをLINEで手軽に。情報収集の時間を短縮できる、毎日使える投資情報ツール。無料から始められます。">
 <style>
   :root {
     --bg:      #070c18;
@@ -137,6 +137,98 @@
     font-size: 15px; line-height: 1.85; color: var(--muted); margin-bottom: 28px;
   }
   .hero-sub b { color: var(--text); }
+
+  .hero-ss {
+    margin: 34px -16px 26px;
+    position: relative;
+    height: 470px;
+  }
+  .hero-ss .ss {
+    position: absolute;
+    width: 56%;
+    border-radius: 22px;
+    overflow: hidden;
+    background: #0b1222;
+    box-shadow: 0 24px 56px rgba(0,0,0,.5);
+    border: 2px solid rgba(255,255,255,.08);
+  }
+  .hero-ss .ss img { width: 100%; display: block; }
+  .hero-ss .ss-main { top: 8px; left: 21%; z-index: 3; transform: rotate(-1deg); }
+  .hero-ss .ss-side-a { top: 34px; left: -4%; z-index: 1; transform: rotate(-6deg); opacity: .9; }
+  .hero-ss .ss-side-b { top: 18px; right: -4%; z-index: 2; transform: rotate(6deg); opacity: .92; }
+  .hero-ss .stamp {
+    position: absolute; right: 6%; top: 4%; z-index: 8;
+    width: 98px; height: 98px; border-radius: 50%;
+    background: var(--gold); color: #15120a;
+    display: grid; place-items: center; text-align: center;
+    font-size: 11px; font-weight: 900; line-height: 1.32;
+    transform: rotate(8deg);
+    box-shadow: 0 12px 28px rgba(0,0,0,.3);
+    border: 3px solid var(--bg);
+  }
+  .hero-ss .stamp b { display: block; font-size: 20px; margin-top: 2px; }
+
+  .screen-section {
+    padding: 58px 0 62px;
+    background:
+      radial-gradient(ellipse at 20% 4%, rgba(0,212,170,.13), transparent 52%),
+      linear-gradient(180deg, #08101f 0%, #0d1626 100%);
+    border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .screen-big {
+    margin: 28px auto 0;
+    width: min(82%, 360px);
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 4px solid rgba(255,255,255,.92);
+    box-shadow: 0 32px 72px rgba(0,0,0,.55);
+    background: #0b1222;
+  }
+  .screen-big img { width: 100%; display: block; }
+  .screen-big .label {
+    position: absolute; top: 16px; left: -4px; z-index: 5;
+    background: var(--red); color: #fff;
+    font-weight: 900; padding: 8px 14px;
+    font-size: 12px; letter-spacing: .04em;
+    border-radius: 0 6px 6px 0;
+    box-shadow: 0 6px 16px rgba(0,0,0,.3);
+  }
+  .screen-big .tag {
+    position: absolute; bottom: 12px; right: 12px; z-index: 5;
+    background: var(--gold); color: #15120a;
+    font-weight: 900; padding: 6px 11px;
+    border-radius: 8px; font-size: 12px;
+    box-shadow: 0 6px 16px rgba(0,0,0,.3);
+  }
+  .screen-note {
+    margin-top: 22px;
+    color: var(--muted);
+    font-size: 14px; font-weight: 700; line-height: 1.8;
+    text-align: center;
+  }
+  .screen-note b { color: var(--accent); }
+  .nums {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-top: 18px;
+  }
+  .num-box {
+    padding: 14px 8px; border-radius: 12px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.09);
+    text-align: center;
+  }
+  .num-box .n {
+    display: block; color: var(--gold);
+    font-size: 24px; font-weight: 900;
+    line-height: 1; letter-spacing: -.02em;
+  }
+  .num-box .l {
+    display: block; margin-top: 6px;
+    color: rgba(255,255,255,.66);
+    font-size: 10.5px; font-weight: 700; line-height: 1.45;
+  }
 
   /* LINE mock */
   .hero-mock { margin: 32px 8px 28px; }
@@ -308,6 +400,132 @@
     font-size: 10px; font-weight: 700;
   }
   .feat-tag.free { background: rgba(6,199,85,.12); color: var(--lg); }
+
+  .metric-chips {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;
+    margin-top: 12px;
+  }
+  .metric-chip {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 8px;
+  }
+  .metric-chip .label {
+    display: block; color: var(--muted);
+    font-size: 10px; font-weight: 700; margin-bottom: 2px;
+  }
+  .metric-chip .num {
+    display: block; color: var(--text);
+    font-size: 13px; font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ══════════════════════════════
+     NEWS TEASER
+  ══════════════════════════════ */
+  .news-teaser {
+    padding: 56px 0;
+    background:
+      radial-gradient(ellipse at 16% 0%, rgba(255,212,59,.12), transparent 52%),
+      linear-gradient(180deg, var(--bg) 0%, #0c1324 100%);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .news-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.2);
+  }
+  .news-head {
+    display: flex; align-items: center; gap: 11px; margin-bottom: 12px;
+  }
+  .news-ic {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: rgba(255,212,59,.12); border: 1px solid rgba(255,212,59,.28);
+    display: grid; place-items: center; flex: none; font-size: 19px;
+  }
+  .news-title { font-size: 17px; font-weight: 900; line-height: 1.45; }
+  .news-card p {
+    color: var(--muted); font-size: 13.5px; line-height: 1.9;
+    margin-bottom: 14px;
+  }
+  .news-list {
+    display: grid; gap: 8px; margin: 14px 0 18px;
+  }
+  .news-list div {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+    color: var(--text); font-size: 12.5px; font-weight: 700; line-height: 1.55;
+  }
+  .news-cta {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px 18px;
+    border-radius: 12px; background: var(--gold); color: #16120a;
+    font-size: 14px; font-weight: 900;
+    box-shadow: 0 10px 28px rgba(255,212,59,.18);
+  }
+  .news-cta::after { content: "→"; font-size: 17px; }
+
+  .screens-strip-section {
+    padding: 56px 0 60px;
+    background: #0a0f1c;
+    color: #fff;
+    overflow: hidden;
+  }
+  .screens-strip-section .section-lead { color: rgba(255,255,255,.72); }
+  .screens-strip {
+    margin: 24px -16px 0;
+    padding: 6px 16px 22px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 68%;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .screens-strip::-webkit-scrollbar { display: none; }
+  .screen-card {
+    scroll-snap-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .screen-card-img {
+    border-radius: 22px;
+    overflow: hidden;
+    background: #0b1222;
+    box-shadow: 0 20px 44px rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.1);
+  }
+  .screen-card-img img { width: 100%; display: block; }
+  .screen-card-cap {
+    padding: 4px;
+    color: rgba(255,255,255,.82);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.55;
+  }
+  .screen-card-cap b {
+    color: var(--gold);
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .swipe-hint {
+    text-align: center;
+    color: rgba(255,255,255,.56);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .15em;
+    margin-top: 4px;
+  }
+  .swipe-hint::before { content: "← "; opacity: .6; }
+  .swipe-hint::after { content: " →"; opacity: .6; }
+  @media (min-width: 520px) {
+    .screens-strip { grid-auto-columns: 42%; }
+  }
 
   /* ══════════════════════════════
      4. BENEFITS
@@ -483,49 +701,15 @@
 
     <p class="hero-sub">
       <b>急落株・相場・注目情報をLINEで即確認。</b><br>
-      投資判断のための情報収集を、もっと速く。
+      割安度・配当・PERまで、投資判断のための情報収集をもっと速く。
     </p>
 
-    <!-- LINE MOCK -->
-    <div class="hero-mock">
-      <div class="lmock">
-        <div class="lm-stat">
-          <span>9:41</span>
-          <div class="r">▌▌▌ WiFi ▮▮</div>
-        </div>
-        <div class="lm-head">
-          <div class="lm-av">N</div>
-          <div class="lm-head-name">LINEニュースbot</div>
-        </div>
-        <div class="lm-body">
-          <div class="lm-row me">
-            <div class="lm-bbl me">急落株</div>
-            <div class="lm-time">9:41</div>
-          </div>
-          <div class="lm-row">
-            <div class="lm-av">N</div>
-            <div class="lm-bbl them">📉 <b>本日の急落株</b>
-
-① 光学精機HD / 1,696円
-   <span class="dn">▼ -10.4%</span>
-② 東邦素材 / 553円
-   <span class="dn">▼  -6.7%</span>
-③ 関東電力HD / 585円
-   <span class="dn">▼  -6.5%</span>
-
-「1 解説」で理由を確認</div>
-            <div class="lm-time">9:41</div>
-          </div>
-        </div>
-        <div class="lm-menu">
-          <div class="rm"><div class="ico">📉</div>急落株</div>
-          <div class="rm"><div class="ico">📊</div>相場</div>
-          <div class="rm"><div class="ico">📰</div>ニュース</div>
-          <div class="rm"><div class="ico">🔍</div>解説</div>
-          <div class="rm"><div class="ico">💰</div>補助金</div>
-          <div class="rm"><div class="ico">⚙</div>設定</div>
-        </div>
-      </div>
+    <!-- HERO: 実際のLINEスクショ -->
+    <div class="hero-ss">
+      <div class="stamp">指標まで<br><b>即返信</b></div>
+      <div class="ss ss-side-a"><img src="invest_assets/market.jpg" alt="相場確認のLINE返信画面"></div>
+      <div class="ss ss-main"><img src="invest_assets/drop-list.jpg" alt="急落株一覧と割安度指標のLINE返信画面"></div>
+      <div class="ss ss-side-b"><img src="invest_assets/rich-menu.jpg" alt="LINEリッチメニュー画面"></div>
     </div>
 
     <div class="cta-wrap">
@@ -562,7 +746,37 @@
 </div>
 
 <!-- ══════════════════════════════
-     2. PAIN
+     2. REAL SCREEN
+══════════════════════════════ -->
+<section class="screen-section">
+  <div class="container">
+    <div class="kicker">Real Screen</div>
+    <h2>急落銘柄も、<br><span class="em">指標まで一発。</span></h2>
+    <p class="section-lead">
+      急落株を押すだけで、前日比・高値差・PER・PBR・配当・指標割安度までまとめて返ってくる。
+    </p>
+
+    <div class="screen-big">
+      <div class="label">実際のLINE画面</div>
+      <img src="invest_assets/drop-list.jpg" alt="急落株一覧と指標が返るLINE画面">
+      <div class="tag">急落株一覧</div>
+    </div>
+
+    <div class="screen-note">
+      価格だけ見て終わりじゃない。<br>
+      <b>割安か、配当があるか、数字でざっくり掴める。</b>
+    </div>
+
+    <div class="nums">
+      <div class="num-box"><span class="n">225</span><span class="l">日経銘柄を確認</span></div>
+      <div class="num-box"><span class="n">PER</span><span class="l">割高感をチェック</span></div>
+      <div class="num-box"><span class="n">配当</span><span class="l">利回りも同時表示</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     3. PAIN
 ══════════════════════════════ -->
 <section class="pain-section">
   <div class="container">
@@ -585,7 +799,7 @@
 </section>
 
 <!-- ══════════════════════════════
-     3. FEATURES
+     4. FEATURES
 ══════════════════════════════ -->
 <section class="feat-section">
   <div class="container">
@@ -599,7 +813,7 @@
           <div class="feat-ic r">📉</div>
           <div class="feat-title">急落株チェック</div>
         </div>
-        <p>大きく下げた銘柄を一覧で確認。見に行かなくても、必要な情報がその場で取り出せます。</p>
+        <p>大きく下げた銘柄を一覧で確認。前日比だけでなく、PER・配当・割安度までその場で取り出せます。</p>
         <div class="mini-data">
           <div class="row"><span class="lbl">光学精機HD</span><span class="val dn">▼ -10.4%</span></div>
           <div class="row"><span class="lbl">東邦素材</span><span class="val dn">▼  -6.7%</span></div>
@@ -614,6 +828,20 @@
           <div class="feat-title">急落理由の解説</div>
         </div>
         <p>なぜ下がったか、AIが背景と要因を要点にまとめて返信。長い記事を探さなくても、原因がわかります。</p>
+        <span class="feat-tag">有料機能（お試し期間あり）</span>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-head">
+          <div class="feat-ic">📌</div>
+          <div class="feat-title">割安度・配当・PERも即出し</div>
+        </div>
+        <p>気になる銘柄の判断材料を、数字でまとめて返信。ざっくり割安か、配当はあるか、PERは高すぎないかをLINEで素早く確認できます。</p>
+        <div class="metric-chips">
+          <div class="metric-chip"><span class="label">割安度</span><span class="num">80/100</span></div>
+          <div class="metric-chip"><span class="label">PER</span><span class="num">11.5倍</span></div>
+          <div class="metric-chip"><span class="label">配当</span><span class="num">1.7%</span></div>
+        </div>
         <span class="feat-tag">有料機能（お試し期間あり）</span>
       </div>
 
@@ -636,7 +864,7 @@
           <div class="feat-ic">📰</div>
           <div class="feat-title">投資関連ニュース</div>
         </div>
-        <p>毎朝5時、AIが選んだ重要ニュース5本を自動配信。起きたらLINEに届いています。</p>
+        <p>毎朝5時、AIが選んだ重要ニュース5本を自動配信。投資情報だけでなく、世の中の動きも起きたらLINEに届いています。</p>
         <span class="feat-tag free">無料</span>
       </div>
 
@@ -661,7 +889,85 @@
 </section>
 
 <!-- ══════════════════════════════
-     4. BENEFITS
+     5. SCREEN STRIP
+══════════════════════════════ -->
+<section class="screens-strip-section">
+  <div class="container">
+    <div class="kicker">Use Case</div>
+    <h2>これ、<span style="color:var(--gold)">全部LINEでできる。</span></h2>
+    <p class="section-lead">横にスワイプで実際の返信画面を確認できます。</p>
+  </div>
+
+  <div class="screens-strip">
+    <div class="screen-card">
+      <div class="screen-card-img"><img src="invest_assets/drop-list.jpg" alt="急落株一覧のLINE返信画面"></div>
+      <div class="screen-card-cap"><b>① 急落株一覧</b>下落率と指標をまとめて確認</div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-card-img"><img src="invest_assets/metrics.jpg" alt="PER、PBR、配当、割安度が見えるLINE画面"></div>
+      <div class="screen-card-cap"><b>② 指標も即出し</b>PER・PBR・配当・割安度まで見える</div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-card-img"><img src="invest_assets/market.jpg" alt="相場確認のLINE返信画面"></div>
+      <div class="screen-card-cap"><b>③ 相場確認</b>日本株・ドル円などを解説つきで確認</div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-card-img"><img src="invest_assets/reason.jpg" alt="急落理由のLINE解説画面"></div>
+      <div class="screen-card-cap"><b>④ 急落理由を解説</b>背景と短期見通しをその場で把握</div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-card-img"><img src="invest_assets/rich-menu.jpg" alt="LINEリッチメニュー画面"></div>
+      <div class="screen-card-cap"><b>⑤ 1タップで呼び出し</b>ニュース・相場・急落株をメニューから</div>
+    </div>
+  </div>
+
+  <div class="swipe-hint">SWIPE</div>
+
+  <div class="container" style="margin-top:20px">
+    <div class="cta-wrap">
+      <a class="cta" href="#" data-cta="free">
+        <span class="line-ic">L</span>
+        <span>この画面を自分のLINEでも見る</span>
+      </a>
+      <div class="cta-bullets">
+        <span style="color:rgba(255,255,255,.72)">登録30秒</span>
+        <span style="color:rgba(255,255,255,.72)">カード不要</span>
+        <span style="color:rgba(255,255,255,.72)">アプリ不要</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     6. NEWS TEASER
+══════════════════════════════ -->
+<section class="news-teaser">
+  <div class="container">
+    <div class="kicker">Daily News</div>
+    <div class="news-card">
+      <div class="news-head">
+        <div class="news-ic">📰</div>
+        <div class="news-title">投資情報だけじゃない。<br>毎日のニュースも要約して配信。</div>
+      </div>
+      <p>
+        朝5時に、AIが選んだ重要ニュースをLINEへ。経済・ビジネス・AI・国際情勢まで、耳の早さで差をつけるためのニュース導線も用意しています。
+      </p>
+      <div class="news-list">
+        <div>5本だけ要約。起きたら今日の話題がわかる</div>
+        <div>ジャンル選択で、経済・AIなど欲しい情報に絞れる</div>
+        <div>追加ニュースや深掘りもLINEでそのまま確認</div>
+      </div>
+      <a class="news-cta" href="ad_news.html">ニュース要約機能を見る</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     7. BENEFITS
 ══════════════════════════════ -->
 <section class="benefit-section">
   <div class="container">
@@ -673,7 +979,7 @@
         <div class="benefit-num">1</div>
         <div class="benefit-body">
           <strong>情報収集が速い</strong>
-          <p>複数アプリを開いて調べる時間がなくなる。LINEだけで主要情報が揃います。</p>
+          <p>複数アプリを開いて調べる時間がなくなる。ニュース・相場・銘柄指標までLINEだけで揃います。</p>
         </div>
       </div>
       <div class="benefit">
@@ -694,7 +1000,7 @@
         <div class="benefit-num">4</div>
         <div class="benefit-body">
           <strong>複数アプリ不要</strong>
-          <p>ニュース・相場・急落株をLINEひとつで。アプリを行き来する手間がなくなります。</p>
+          <p>ニュース・相場・急落株・PER/配当などの指標をLINEひとつで。アプリを行き来する手間がなくなります。</p>
         </div>
       </div>
       <div class="benefit">
@@ -709,7 +1015,7 @@
 </section>
 
 <!-- ══════════════════════════════
-     5. SCENES
+     8. SCENES
 ══════════════════════════════ -->
 <section class="scene-section">
   <div class="container">
@@ -725,7 +1031,7 @@
       <div class="scene-card">
         <div class="scene-time">昼 / Noon</div>
         <div class="scene-title">昼休みにサクッと</div>
-        <div class="scene-desc">前場の動きを確認。急落株メニューをタップするだけ。</div>
+        <div class="scene-desc">前場の動きを確認。急落株と割安度をタップするだけでチェック。</div>
       </div>
       <div class="scene-card">
         <div class="scene-time">引け後 / Close</div>
@@ -742,7 +1048,7 @@
 </section>
 
 <!-- ══════════════════════════════
-     6. STEPS
+     9. STEPS
 ══════════════════════════════ -->
 <section class="steps-section">
   <div class="container">
@@ -763,7 +1069,7 @@
         <div class="step-content">
           <div class="step-label">STEP 02</div>
           <div class="step-title">メニューから相場・急落株を見る</div>
-          <p>画面下のリッチメニューに「相場」「急落株」が表示されます。タップするだけで情報が届きます。</p>
+          <p>画面下のリッチメニューに「相場」「急落株」「ニュース」が表示されます。タップするだけで情報が届きます。</p>
         </div>
       </div>
       <div class="step">
@@ -771,7 +1077,7 @@
         <div class="step-content">
           <div class="step-label">STEP 03</div>
           <div class="step-title">必要な情報を確認する</div>
-          <p>毎朝自動配信のニュースと合わせて、投資に使える情報収集がLINEで完結します。</p>
+          <p>毎朝自動配信のニュースと合わせて、急落理由・割安度・配当・PERまでLINEで確認できます。</p>
         </div>
       </div>
     </div>
@@ -791,7 +1097,7 @@
 </section>
 
 <!-- ══════════════════════════════
-     7. FAQ
+     10. FAQ
 ══════════════════════════════ -->
 <section class="faq-section">
   <div class="container">
@@ -805,7 +1111,7 @@
       </details>
       <details class="faq">
         <summary>投資初心者でも使えますか？</summary>
-        <div class="faq-body">使えます。急落株や相場の情報には、AIによる背景・理由の解説がついているので、専門用語がわからなくても読めます。なお本サービスは情報提供を目的としており、投資の勧誘・助言ではありません。</div>
+        <div class="faq-body">使えます。急落株や相場の情報には、AIによる背景・理由の解説がついており、PER・配当・割安度などの指標も見やすく整理します。なお本サービスは情報提供を目的としており、投資の勧誘・助言ではありません。</div>
       </details>
       <details class="faq">
         <summary>難しい操作は必要ですか？</summary>
@@ -824,14 +1130,14 @@
 </section>
 
 <!-- ══════════════════════════════
-     8. FINAL CTA
+     11. FINAL CTA
 ══════════════════════════════ -->
 <section class="final" id="final">
   <div class="container">
     <div class="kicker">Get Started</div>
     <h2>投資情報、<br><span class="em">もっとスマートに。</span></h2>
     <p>
-      相場確認も急落チェックも、<br>
+      相場確認も急落チェックも、毎日のニュース要約も、<br>
       LINEで手軽に始められます。
     </p>
     <div class="cta-wrap">
