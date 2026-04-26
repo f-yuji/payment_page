@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18120483261"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18120483261');
+</script>
 <title>ニュース、もう読まなくていい。| LINEニュースbot</title>
 <meta name="description" content="朝5時、寝てる間にLINEにAI要約ニュースが届く。起きてすぐ1分で今日の話題がわかる。ジャンル選択・オンデマンド配信対応。無料。" />
 <template id="__bundler_thumbnail" data-bg-color="#0a0f1c">
@@ -155,6 +163,14 @@
       radial-gradient(circle at 0% 110%, rgba(31,111,235,.10), transparent 40%),
       linear-gradient(180deg, #fff 0%, #f3f6fc 100%);
   }
+  .hero .brand,
+  .hero .shout,
+  .hero h1,
+  .hero .sub-lead,
+  .hero .cta-wrap{
+    position:relative;
+    z-index:20;
+  }
   .brand{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;font-weight:800}
   .brand-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#1f6feb,#4c8bff);color:#fff;display:grid;place-items:center;font-weight:900;letter-spacing:-.02em}
 
@@ -203,6 +219,7 @@
   /* hero: 3枚の実機スクショを重ねる */
   .hero-ss{
     margin:32px -16px 20px;position:relative;
+    z-index:1;
     height:460px;
   }
   .hero-ss .ss{
